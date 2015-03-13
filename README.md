@@ -21,7 +21,7 @@ To compile the C/mex code run:
 ```matlab
 compile.m
 ```
-which creates the folder *./lib*.   
+which creates the folder *./lib*. For testing purposes run any script in *./test*.   
 
 ### Tests:  
 - Matlab 2014a, 64-bit Linux (Ubuntu 12.04 LTS)  
