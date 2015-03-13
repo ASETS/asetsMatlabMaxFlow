@@ -9,7 +9,7 @@ TBD
 - John SH. Baxter (@jshbaxter), Robarts Research Institute (CAN)
 - Jing Yuan, Robarts Research Institute (CAN)
 
-### Overview / file structure:   
+### Overview of file structure:   
 *./* : Compile scripts, readme, license and todo list  
 *./applications*: Contains examples of typical applications in image segmentation and analysis  
 *./data*: Example data to run the applications  
