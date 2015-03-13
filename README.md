@@ -1,4 +1,5 @@
-## Advanced Segmentation Tools (ASeTs) 2015 ([link](http://github.com/ASETS))
+## Advanced Segmentation Tools ([ASeTs](http://github.com/ASETS)) 
+### Matlab repository ([website](http://asets.github.io/asetsMatlabMaxFlow/))
 
 ### License:  
 TBD
