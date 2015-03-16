@@ -12,8 +12,8 @@ Applications:
 
 Optimization methods: 
 [ ] - Binary Max Flow solver
-[ ] - HMF optimizer 
-[ ] - Pseudo-Flow optimizer
+[x] - HMF optimizer 
+[x] - Pseudo-Flow optimizer
 [ ] - Co-segmentation continuous max flow solver 
 [ ] - Ishikawa model solver 
 
