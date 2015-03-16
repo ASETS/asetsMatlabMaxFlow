@@ -50,6 +50,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     float *u, *cvg;
     int *itNum;
     double *runTime;
+    int nDim;
+    int dim[4];
     
     /* others */
     time_t  start_time, end_time;
@@ -84,11 +86,10 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     
     /* Outputs */
     /* outputs the computed u(x)  */
-    int nDim = 3;
-    int dim[4];
     dim[0] = Ny;
     dim[1] = Nx;
     dim[2] = nLab;
+    nDim = 3;
     
     pmxOut[0] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     u = mxGetData(pmxOut[0]);
@@ -140,7 +141,9 @@ void runMaxFlow( float *alpha, float *Ct,
         float *u, float *cvg, int *itNum){
     
     
-    float   *bx, *by, *dv, *gk, *pd, *ps, *pt;
+    float   *bx, *by, *dv, *gk, *ps, *pt;
+    int i;
+    float total_err;
     
     /* alloc buffers */
     bx = (float *) calloc( (unsigned)((Nx+1)*Ny*nLab), sizeof(float) );
@@ -156,7 +159,7 @@ void runMaxFlow( float *alpha, float *Ct,
     
     
     /* iterate */
-    int i = 0;
+    i = 0;
     for (i = 0; i < maxIt; i++){
                 
         int k = 0;
@@ -181,7 +184,7 @@ void runMaxFlow( float *alpha, float *Ct,
         }
         
         /* update ps(x) and the multiplier/labeling functions u(x,lbl) */
-        float total_err = updatePSU(dv, pt, u, ps, Nx, Ny, nLab, cc);
+        total_err = updatePSU(dv, pt, u, ps, Nx, Ny, nLab, cc);
                 
         /* to be implemented */
         /* evaluate the convergence error */
@@ -282,6 +285,7 @@ void updatePY(float *gk, float *by, int Nx, int Ny, float steps, int lbl_id){
 
 void projStep(float *bx, float *by, float *alpha, float *gk, int Nx, int Ny, int lbl_id){
     
+    float fpt;
     int x = 0;
     int y = 0;
     for (x=0; x< Nx; x++){
@@ -290,7 +294,7 @@ void projStep(float *bx, float *by, float *alpha, float *gk, int Nx, int Ny, int
             int g_idx = x*Ny + y;
             int l_idx = g_idx + lbl_id*Nx*Ny;
             
-            float fpt = sqrt((pow(bx[l_idx+Ny],2) + pow(bx[l_idx],2) +
+            fpt = sqrt((pow(bx[l_idx+Ny],2) + pow(bx[l_idx],2) +
                     pow(by[l_idx+1],2) + pow(by[l_idx],2))*0.5);
             
             if (fpt > alpha[l_idx])
@@ -339,6 +343,7 @@ void updateBY(float *by, float *gk, int Nx, int Ny, int lbl_id){
 
 void updatePTDIV(float *dv, float *bx, float *by, float *ps, float *u, float *pt, float *Ct, int Nx, int Ny, float cc, int lbl_id){
     
+    float fpt;
     int x = 0;
     int y = 0;
     for (x=0; x< Nx; x++){
@@ -351,7 +356,7 @@ void updatePTDIV(float *dv, float *bx, float *by, float *ps, float *u, float *pt
             dv[l_idx] = by[l_idx+1] - by[l_idx]
                     + bx[l_idx+Ny] - bx[l_idx];
             
-            float fpt = ps[g_idx] + u[l_idx]/cc - dv[l_idx];
+            fpt = ps[g_idx] + u[l_idx]/cc - dv[l_idx];
             
             if (fpt < Ct[l_idx])
                 pt[l_idx] = fpt;
@@ -366,6 +371,10 @@ void updatePTDIV(float *dv, float *bx, float *by, float *ps, float *u, float *pt
 
 float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int nLab, float cc){
     
+    float fpt;
+    int l;
+    int g_idx;
+    float* ft = malloc(sizeof(float)*nLab);
     int x = 0;
     int y = 0;
     
@@ -374,13 +383,10 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int n
     for (x=0; x< Nx; x++){
         for (y=0; y< Ny; y++){
             
-            int g_idx = x*Ny + y;
+            g_idx = x*Ny + y;
             
-            float fpt = 0;
+            fpt = 0;
             
-            float ft[nLab];
-            
-            int l = 0;
             for (l = 0; l < nLab; l++){
                 int l_idx = g_idx + l*Nx*Ny;
                 
@@ -402,6 +408,7 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int n
             
         }
     }
+    free(ft);
     return erru;
 }
 

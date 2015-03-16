@@ -53,7 +53,7 @@ Ct = zeros(r,c,s, numberOfLabels);
 alpha = alpha1.*ones(r,c,s, numberOfLabels);
 
 % pars = [rows; columns; slices; numberOfLabels; maxIter; convRate; cc; stepSize];
-pars = [r; c; s; numberOfLabels; 400; 1e-5; 0.25; 0.11];
+pars = [r; c; s; numberOfLabels; 200; 1e-5; 0.25; 0.11];
 
 % normalize image
 imax = max(img(:));
@@ -86,7 +86,7 @@ for it=1:maxLevelSetIterations
     Ct = Ct - min(min(min(min(Ct))));
     
     % call 3D max-flow optimizer
-    [u, erriter, i, timet] = asetsPotts3D(single(Ct), single(alpha), single(pars));
+    [u, erriter, i, timet] = asetsPotts3D_mex(single(Ct), single(alpha), single(pars));
     
     % maj vote to discretize continuous labels
     [uu,I] = max(u, [], 4);

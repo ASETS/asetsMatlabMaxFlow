@@ -11,9 +11,9 @@ addpath(['..', filesep, 'lib']);
 
 % flags
 run2DPottsTestFLAG = 1;
-run3DPottsTestFLAG = 0;
+run3DPottsTestFLAG = 1;
 
-run2DPotts_starShapeTestFLAG = 1;
+run2DPotts_starShapeTestFLAG = 0;
 
 visualizationFLAG = 1;
 
@@ -47,7 +47,7 @@ if (run2DPottsTestFLAG)
     pars = [r; c; numberOfLabels; 200; 1e-11; 0.2; 0.16];
     
     % run both 2D matlab and mex implementations
-    [u, erriter, i, timet] = asetsPotts2D_mex(single(alpha), single(Ct), single(pars));
+    [u, erriter, i, timet] = asetsPotts2D_mex(single(Ct), single(alpha), single(pars));
     [u2, erriter2, i2, timet2] = asetsPotts2D(Ct, alpha, pars);
     
     
@@ -69,7 +69,7 @@ if (run2DPottsTestFLAG)
         subplot(1,2,1); imshow(I,[1 numberOfLabels]);
         subplot(1,2,2); imshow(I2,[1 numberOfLabels]);
         
-        disp(['Error between implementations = ', num2str(sum(sum(abs(I-I2))))]);
+        disp(['Labelling error between implementations = ', num2str(sum(sum(abs(I-I2))))]);
     end
     colormap('jet');
     
@@ -104,7 +104,7 @@ if (run3DPottsTestFLAG)
     pars = [r; c; s; numberOfLabels; 200; 1e-11; 0.25; 0.11];
     
     % run both 3D matlab and mex implementations
-    [u, erriter, i, timet] = asetsPotts3D_mex(single(alpha), single(Ct), single(pars));
+    [u, erriter, i, timet] = asetsPotts3D_mex(single(Ct), single(alpha), single(pars));
     [u2, erriter2, i2, timet2] = asetsPotts3D(Ct, alpha, pars);
     
     
@@ -138,7 +138,7 @@ if (run3DPottsTestFLAG)
         subplot(2,3,6); imshow(squeeze(I2(:,:,vis_s)),[1 numberOfLabels]);
         
         colormap('jet');
-        disp(['Error between implementations = ', num2str(sum(sum(sum(abs(I-I2)))))]);
+        disp(['Labeling error between implementations = ', num2str(sum(sum(sum(abs(I-I2)))))]);
         
     end
 end
@@ -170,7 +170,6 @@ if(run2DPotts_starShapeTestFLAG)
         
     % call max-flow optimizer
     % pars = [rows; columns; numberOfLabels; maxIter; convRate; cc; stepSize_s, stepSize_v];
-    %pars = [r; c; numberOfLabels; 2000; 1e-11; 0.2; 0.16; 0.7];
     pars = [r; c; numberOfLabels; 1000; 1e-11; 0.2; 0.16; 0.7];
     
     % run both 2D matlab and mex implementations

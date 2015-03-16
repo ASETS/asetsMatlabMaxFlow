@@ -50,6 +50,9 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     int *itNum;
     double *runTime;
     
+    int dim[4];
+    int nDim;
+    
     /* others */
     time_t  start_time, end_time;
     
@@ -85,12 +88,11 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     
     /* Outputs */
     /* outputs the computed u(x)  */
-    int nDim = 4;
-    int dim[4];
     dim[0] = Ny;
     dim[1] = Nx;
     dim[2] = Nz;
     dim[3] = nLab;
+    nDim = 4;
         
     pmxOut[0] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     u = mxGetData(pmxOut[0]);
@@ -142,7 +144,9 @@ void runMaxFlow( float *alpha, float *Ct,
         float *u, float *cvg, int *itNum){
     
     
-    float   *bx, *by, *bz, *dv, *gk, *pd, *ps, *pt;
+    float   *bx, *by, *bz, *dv, *gk, *ps, *pt;
+    int i;
+    float total_err;
     
     /* alloc buffers */
     bx = (float *) calloc( (unsigned)((Nx+1)*Ny*Nz*nLab), sizeof(float) );
@@ -157,8 +161,9 @@ void runMaxFlow( float *alpha, float *Ct,
     
     init();
     
+    
     /* iterate */
-    int i = 0;
+    i = 0;
     for (i = 0; i < maxIt; i++){
         
         int k = 0;
@@ -183,7 +188,7 @@ void runMaxFlow( float *alpha, float *Ct,
         }
         
         /* update ps(x) and the multiplier/labeling functions u(x,lbl) */
-        float total_err = updatePSU(dv, pt, u, ps, Nx, Ny, Nz, nLab, cc);
+        total_err = updatePSU(dv, pt, u, ps, Nx, Ny, Nz, nLab, cc);
         
         /* to be implemented */
         /* evaluate the convergence error */
@@ -317,6 +322,7 @@ void updatePZ(float *gk, float *bz, int Nx, int Ny, int Nz, float steps, int lbl
 
 void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     
+    float fpt;
     int x = 0;
     int y = 0;
     int z = 0;
@@ -328,7 +334,7 @@ void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, 
                 int g_idx = z*Nx*Ny + x*Ny + y;
                 int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
-                float fpt = sqrt((pow(bx[l_idx+Ny],2) + pow(bx[l_idx],2) +
+                fpt = sqrt((pow(bx[l_idx+Ny],2) + pow(bx[l_idx],2) +
                         pow(by[l_idx+1],2) + pow(by[l_idx],2) +
                         pow(bz[l_idx+(Nx*Ny)],2) + pow(bz[l_idx],2)
                         )*0.5);
@@ -346,6 +352,8 @@ void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, 
 
 void updateBX(float *bx, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     
+    int g_idx;
+    int l_idx;
     int x = 0;
     int y = 0;
     int z = 0;
@@ -354,8 +362,8 @@ void updateBX(float *bx, float *gk, int Nx, int Ny, int Nz, int lbl_id){
             for (y=0; y< Ny; y++){
                 
                 
-                int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
                 bx[l_idx] = (gk[g_idx] + gk[g_idx-Ny])
                 *0.5*bx[l_idx];
@@ -366,6 +374,8 @@ void updateBX(float *bx, float *gk, int Nx, int Ny, int Nz, int lbl_id){
 
 void updateBY(float *by, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     
+    int g_idx;
+    int l_idx;
     int x = 0;
     int y = 0;
     int z = 0;
@@ -374,8 +384,8 @@ void updateBY(float *by, float *gk, int Nx, int Ny, int Nz, int lbl_id){
             for (y=1; y< Ny; y++){
                 
                 
-                int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
                 by[l_idx] = 0.5*(gk[g_idx-1] + gk[g_idx])
                 *by[l_idx];
@@ -385,6 +395,8 @@ void updateBY(float *by, float *gk, int Nx, int Ny, int Nz, int lbl_id){
 }
 void updateBZ(float *bz, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     
+    int g_idx;
+    int l_idx;
     int x = 0;
     int y = 0;
     int z = 0;
@@ -393,8 +405,8 @@ void updateBZ(float *bz, float *gk, int Nx, int Ny, int Nz, int lbl_id){
             for (y=0; y< Ny; y++){
                 
                 
-                int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
                 bz[l_idx] = 0.5*(gk[g_idx-(Nx*Ny)] + gk[g_idx])
                 *bz[l_idx];
@@ -404,6 +416,9 @@ void updateBZ(float *bz, float *gk, int Nx, int Ny, int Nz, int lbl_id){
 }
 void updatePTDIV(float *dv, float *bx, float *by, float *bz, float *ps, float *u, float *pt, float *Ct, int Nx, int Ny, int Nz, float cc, int lbl_id){
     
+    float fpt;
+    int g_idx;
+    int l_idx;
     int x = 0;
     int y = 0;
     int z = 0;
@@ -412,15 +427,15 @@ void updatePTDIV(float *dv, float *bx, float *by, float *bz, float *ps, float *u
             for (y=0; y< Ny; y++){
                 
                 
-                int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
                 /* update the divergence field dv(x,l)  */
                 dv[l_idx] = by[l_idx+1] - by[l_idx] +
                         bx[l_idx+Ny] - bx[l_idx] +
                         bz[l_idx+(Nx*Ny)] - bz[l_idx];
                 
-                float fpt = ps[g_idx] + u[l_idx]/cc - dv[l_idx];
+                fpt = ps[g_idx] + u[l_idx]/cc - dv[l_idx];
                 
                 if (fpt < Ct[l_idx])
                     pt[l_idx] = fpt;
@@ -435,6 +450,11 @@ void updatePTDIV(float *dv, float *bx, float *by, float *bz, float *ps, float *u
 
 float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int Nz, int nLab, float cc){
     
+    int g_idx;
+    int l_idx;
+    int l;
+    float fpt;
+    float* ft = malloc(sizeof(float)*nLab);
     int x = 0;
     int y = 0;
     int z = 0;
@@ -445,15 +465,12 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int N
         for (x=0; x< Nx; x++){
             for (y=0; y< Ny; y++){
                 
-                int g_idx = z*Nx*Ny + x*Ny + y;
+                g_idx = z*Nx*Ny + x*Ny + y;
                 
-                float fpt = 0;
+                fpt = 0;
                 
-                float ft[nLab];
-                
-                int l = 0;
                 for (l = 0; l < nLab; l++){
-                    int l_idx = g_idx + l*(Nx*Ny*Nz);
+                    l_idx = g_idx + l*(Nx*Ny*Nz);
                     
                     ft[l] = dv[l_idx] + pt[l_idx];
                     
@@ -465,7 +482,7 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int N
                 
                 /* update the multipliers u(x,l) */
                 for (l = 0; l < nLab; l++){
-                    int l_idx = g_idx + l*(Nx*Ny*Nz);
+                    l_idx = g_idx + l*(Nx*Ny*Nz);
                     
                     fpt = cc*(ft[l] - ps[g_idx]);
                     u[l_idx] -= fpt;
@@ -476,6 +493,7 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int N
             }
         }
     }
+    free(ft);
     return erru;
 }
 
