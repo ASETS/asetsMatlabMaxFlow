@@ -57,8 +57,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     start_time = clock();
     
     /* Inputs */
-    alpha = mxGetData(pmxIn[0]);        /* penalty parameters */
-    Ct = mxGetData(pmxIn[1]);             /* bound of sink flows */
+    Ct = mxGetData(pmxIn[0]);             /* bound of sink flows */
+    alpha = mxGetData(pmxIn[1]);        /* penalty parameters */
     pars = mxGetData(pmxIn[2]);  /* Vector of parameters */
     
     /*
@@ -156,7 +156,6 @@ void runMaxFlow( float *alpha, float *Ct,
         mexPrintf("malloc error.\n");
     
     init();
-    
     
     /* iterate */
     int i = 0;

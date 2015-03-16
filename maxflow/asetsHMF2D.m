@@ -1,15 +1,21 @@
 classdef asetsHMF2D < handle
 %   John SH Baxter, Robarts Research Institute, 2015
 %
-%   Full implementation with of [1] in 2D and HMF implementation
-%   of [2]
+%   Full implementation with of [1,2] in 2D and HMF implementation
+%   of [3]
 %
-%   [1] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM.
+%   [1] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM. (2014)
 %       A Continuous Max-Flow Approach to General
 %       Hierarchical Multi-Labelling Problems
 %       arXiv preprint arXiv:1404.0336
 %
-%   [2] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM.
+%   [2] Rajchl M., J. Baxter, A. McLeod, J. Yuan, W. Qiu, 
+%       T. Peters, and A. Khan (2015). 
+%       Hierarchical Max-Flow Segmentation Framework For Multi-Atlas 
+%       Segmentation with Kohonen Self-Organizing Map Based Gaussian
+%       Mixture Modeling. Medical Image Analysis
+%
+%   [3] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM. (2014)
 %       A Proximal Bregman Projection Approach to Continuous
 %       Max-Flow Problems Using Entropic Distances
 %       arXiv preprint arXiv:1501.07844

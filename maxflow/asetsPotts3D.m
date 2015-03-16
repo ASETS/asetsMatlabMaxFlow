@@ -136,10 +136,9 @@ for i = 1:iterNum
     
 end
 
-toc
-timet = toc
+timet = toc;
 
-msg = sprintf('number of iterations = %u. \n', i);
+msg = sprintf('number of iterations = %u; time = %.2f\n', i, timet);
 disp(msg);
 
 
