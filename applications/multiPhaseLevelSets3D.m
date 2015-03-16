@@ -1,4 +1,4 @@
-function [] = multiPhaseLevelSets()
+function [] = multiPhaseLevelSets3D()
 
 %   Martin Rajchl, Imperial College London, 2015
 %   Example application: Fast max flow propagated levelsets

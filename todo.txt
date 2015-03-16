@@ -4,6 +4,7 @@ Website:
 Applications: 
 [x] - 3D interactive segmentation 
 [x] - Probabilistic label map regularization 
+[x] - Multi-phase levelsets implementation
 [ ] - Regularization of manual segmentations (Gaussian smooth, max flow)
 [ ] - Iterative MF distribution matching
 [ ] - Refactor visualization 
@@ -11,7 +12,6 @@ Applications:
 
 Optimization methods: 
 [ ] - Binary Max Flow solver
-[ ] - Multi-phase levelsets implementation
 [ ] - HMF optimizer 
 [ ] - Pseudo-Flow optimizer
 [ ] - Co-segmentation continuous max flow solver 

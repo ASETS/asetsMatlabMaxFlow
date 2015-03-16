@@ -12,7 +12,6 @@ addpath(['..', filesep, 'lib']);
 % flags
 run2DPottsTestFLAG = 1;
 run3DPottsTestFLAG = 1;
-
 run2DPotts_starShapeTestFLAG = 0;
 
 visualizationFLAG = 1;

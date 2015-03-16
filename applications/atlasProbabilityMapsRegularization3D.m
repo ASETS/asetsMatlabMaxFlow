@@ -1,4 +1,4 @@
-function [] = atlasProbabilityMapsRegularization()
+function [] = atlasProbabilityMapsRegularization3D()
 
 %   Martin Rajchl, Imperial College London, 2015
 %   Example application: Graph cut post processing of probabilistic labels.
@@ -9,12 +9,12 @@ function [] = atlasProbabilityMapsRegularization()
 %
 %   References: 
 %   [1] Rajchl M., et al. (2015). Hierarchical Max-Flow Segmentation
-%   Framework For Multi-Atlas Segmentation with Kohonen Self-Organizing 
-%   Map Based Gaussian Mixture Modeling. Medical Image Analysis
+%       Framework For Multi-Atlas Segmentation with Kohonen Self-Organizing 
+%       Map Based Gaussian Mixture Modeling. Medical Image Analysis
 %
 %   [2] Qiu, W. et al. (2014). Cerebral Ventricle Segmentation from 3D 
-%   Pre-term IVH Neonate MR Images Using Atlas-Based Convex Optimization.
-%   Computer-Assisted and Robotic Endoscopy, pp.46–54.
+%       Pre-term IVH Neonate MR Images Using Atlas-Based Convex Optimization.
+%       Computer-Assisted and Robotic Endoscopy, pp.46–54.
 
 
 close all;

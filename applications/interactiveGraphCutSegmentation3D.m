@@ -1,4 +1,4 @@
-function [] = interactiveGraphCutSegmentation()
+function [] = interactiveGraphCutSegmentation3D()
 
 %   Martin Rajchl, Imperial College London, 2015
 %   Example application: Interactive graph cut segmentation 
@@ -9,12 +9,12 @@ function [] = interactiveGraphCutSegmentation()
 %
 %   References: 
 %   [1] Rajchl M., et al. (2014). Interactive Hierarchical Max-Flow 
-%   Segmentation of Scar Tissue from Late-Enhancement Cardiac MR Images. 
-%   IEEE Transactions on Medical Imaging 33(1), 159–172.
+%       Segmentation of Scar Tissue from Late-Enhancement Cardiac MR Images. 
+%       IEEE Transactions on Medical Imaging 33(1), 159–172.
 %
 %   [2] Baxter, JSH. et al (2015). Optimization-Based Interactive 
-%   Segmentation Interface for Multi-Region Problems. 
-%   SPIE Medical Imaging. 
+%       Segmentation Interface for Multi-Region Problems. 
+%       SPIE Medical Imaging. 
 
 close all;
 clear all;
