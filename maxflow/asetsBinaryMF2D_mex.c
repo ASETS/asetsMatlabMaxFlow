@@ -63,7 +63,6 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
      *pfVecParameters Setting
      * [0] : number of columns
      * [1] : number of rows
-     * [2] : number of labels
      * [3] : the maximum iteration number
      * [4] : error criterion
      * [5] : cc for the step-size of ALM
@@ -159,7 +158,7 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
         updatePX(gk, bx, Nx, Ny, steps);
         updatePY(gk, by, Nx, Ny, steps);
         
-        /* projection step to make |p(x,i)| <= alpha(x,lbl)*/
+        /* projection step to make |p(x,i)| <= alpha(x)*/
         projStep(bx, by, alpha, gk, Nx, Ny);
         
         /* update the component bx, by */
