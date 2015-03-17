@@ -21,6 +21,7 @@ TBD
     - Regularization of probabilistic label maps as in atlas-based segmentation
     - High-performance multi-phase levelsets 
     - Post-processing of flawed manual segmentations with constrast sensitive regularization
+    - L1 intensity segmentation  
 
 ### Overview of file structure:   
 *./*: Compile scripts, readme, license and todo list  
