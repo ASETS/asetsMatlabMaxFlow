@@ -1,5 +1,4 @@
-## Advanced Segmentation Tools ([ASeTs](http://github.com/ASETS)) 
-### Matlab repository ([website](http://asets.github.io/asetsMatlabMaxFlow/))
+## Advanced Segmentation Tools ([ASeTs](http://github.com/ASETS)) Matlab repository ([website](http://asets.github.io/asetsMatlabMaxFlow/))
 
 ### License:  
 TBD
@@ -9,8 +8,22 @@ TBD
 - John SH. Baxter (@jshbaxter), Robarts Research Institute (CAN)
 - Jing Yuan, Robarts Research Institute (CAN)
 
+### Features: 
+- Fast parallel continuous max flow solvers in 2D/3D
+    - Binary max flow
+    - Multi-region (Potts model, Ishikawa model, Hierarchical Max Flow)
+    - In two different implementations (full flow and pseudo flow solvers)
+- Implemented in multiple languages
+   - Matlab/mex/C
+   - Matlab/CUDA
+- Application examples for (medical) image segmentation:
+    - Interactive max flow graph cuts
+    - Regularization of probabilistic label maps as in atlas-based segmentation
+    - High-performance multi-phase levelsets 
+    - Post-processing of flawed manual segmentations with constrast sensitive regularization
+
 ### Overview of file structure:   
-*./* : Compile scripts, readme, license and todo list  
+*./*: Compile scripts, readme, license and todo list  
 *./applications*: Contains examples of typical applications in image segmentation and analysis  
 *./data*: Example data to run the applications  
 *./lib*: Is created by compile.m and contains the compiled C/mex files  
@@ -26,5 +39,5 @@ which creates the folder *./lib*. For testing purposes run any script in *./test
 
 ### Tests:  
 - Matlab 2014a, 64-bit Linux (Ubuntu 12.04 LTS)  
-- Matlab 201*, 64-bit Windows 7  
+- Matlab 2014a, 64-bit Windows 7  
 
