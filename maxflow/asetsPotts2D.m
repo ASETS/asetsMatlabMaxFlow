@@ -5,7 +5,7 @@ function [u, erriter, i, timet] = asetsPotts2D(Ct, alpha, pars)
 %   Re-implementation with of [1] with a horizontal model
 %   according to [2]
 %
-%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boycov, Y.
+%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boykov, Y.
 %       A Continuous Max-Flow Approach to Potts Model
 %       ECCV, 2010
 %
@@ -42,8 +42,8 @@ vol = rows*cols*nlab;
 %   - the spatial flow fiels p(x,i=1...nlab) = (pp1(x,i), pp2(x,i)),
 %     set to be zero.
 
-u = zeros(rows,cols,nlab);
-pt = zeros(rows,cols,nlab);
+u = zeros(rows,cols,nlab, class(Ct));
+pt = zeros(rows,cols,nlab, class(Ct));
 
 [ps,I] = min(Ct, [], 3);
 
@@ -54,17 +54,17 @@ for k=1:rows
     end
 end
 
-divp = zeros(rows,cols,nlab);
+divp = zeros(rows,cols,nlab, class(Ct));
 
-pp1 = zeros(rows, cols+1,nlab);
-pp2 = zeros(rows+1, cols,nlab);
+pp1 = zeros(rows, cols+1,nlab, class(Ct));
+pp2 = zeros(rows+1, cols,nlab, class(Ct));
 
-erriter = zeros(iterNum,1);
+erriter = zeros(iterNum,1, class(Ct));
 
 tic
 for i = 1:iterNum
     
-    pd = zeros(rows,cols);
+    pd = zeros(rows,cols, class(Ct));
     
     % update the flow fields within each layer i=1...nlab
     
@@ -124,6 +124,11 @@ for i = 1:iterNum
         break;
     end
     
+end
+
+if(strcmp(class(u), 'gpuArray'))
+    u = gather(u);
+    erriter = gather(erriter);
 end
 
 timet = toc;

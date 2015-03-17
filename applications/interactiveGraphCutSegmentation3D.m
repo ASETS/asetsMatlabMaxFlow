@@ -24,6 +24,7 @@ addpath(['..', filesep, 'maxflow']);
 addpath(['..', filesep, 'lib']);
 
 % flags
+useCUDAFLAG = 1;
 visualizationFLAG = 1;
 
 % load image and user scribbles
@@ -50,9 +51,12 @@ end
 % pars = [rows; columns; slices; numberOfLabels; maxIter; convRate; cc; stepSize];
 pars = [r; c; s; numberOfLabels; 200; 1e-11; 0.25; 0.11];
 
-% call 3D max-flow optimizer
-[u, erriter, i, timet] = asetsPotts3D(Ct, alpha, pars);
-
+% call 3D max-flow optimizer with CUDA if possible
+if(gpuDeviceCount && useCUDAFLAG)
+    [u, erriter, i, timet] = asetsPotts3D(gpuArray(Ct), gpuArray(alpha), pars);
+else
+    [u, erriter, i, timet] = asetsPotts3D(Ct, alpha, pars);
+end
 % maj vote to discretize continuous labels
 [uu,I] = max(u, [], 4);
 

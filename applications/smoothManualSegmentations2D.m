@@ -8,7 +8,7 @@ function [] = smoothManualSegmentations2D()
 %
 %   References: 
 %
-%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boycov, Y.
+%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boykov, Y.
 %       A Continuous Max-Flow Approach to Potts Model
 %       ECCV, 2010
 %
@@ -62,8 +62,8 @@ pars = [r; c; numberOfLabels; 300; 1e-11; 0.25; 0.11];
 % Regularize with constant regularization term alpha 
 alpha1 = 0.2.*ones(r,c, numberOfLabels);
 
-% call 3D max-flow optimizer
-[u, erriter, i, timet] = asetsPotts2D(single(Ct), single(alpha1), single(pars));
+% call 2D max-flow optimizer
+[u, erriter, i, timet] = asetsPotts2D(gpuArray(Ct), gpuArray(alpha1), gpuArray(pars));
 
 % maj vote to discretize continuous labels
 [uu,I] = max(u, [], 3);

@@ -5,7 +5,7 @@ function [u, erriter, i, timet] = asetsPotts3D(Ct, alpha, pars)
 %   Re-implementation with of [1] with a horizontal model
 %   according to [2]
 %
-%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boycov, Y.
+%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boykov, Y.
 %       A Continuous Max-Flow Approach to Potts Model
 %       ECCV, 2010
 %
@@ -43,9 +43,9 @@ vol = rows*cols*slices*nlab;
 %   - the spatial flow fiels p(x,i=1...nlab) = (pp1(x,i), pp2(x,i)),
 %     set to be zero.
 
-u = zeros(rows,cols,slices,nlab);
-pt = zeros(rows,cols,slices,nlab);
-ps = zeros(rows,cols,slices);
+u = zeros(rows,cols,slices,nlab, class(Ct));
+pt = zeros(rows,cols,slices,nlab, class(Ct));
+ps = zeros(rows,cols,slices, class(Ct));
 
 % [ps,I] = min(Ct, [], 4);
 % 
@@ -56,18 +56,18 @@ ps = zeros(rows,cols,slices);
 %     end
 % end
 
-divp = zeros(rows,cols,slices,nlab);
+divp = zeros(rows,cols,slices,nlab, class(Ct));
 
-pp1 = zeros(rows, cols+1, slices,nlab);
-pp2 = zeros(rows+1, cols, slices,nlab);
-pp3 = zeros(rows, cols, slices+1,nlab);
+pp1 = zeros(rows, cols+1, slices,nlab, class(Ct));
+pp2 = zeros(rows+1, cols, slices,nlab, class(Ct));
+pp3 = zeros(rows, cols, slices+1,nlab, class(Ct));
 
-erriter = zeros(iterNum,1);
+erriter = zeros(iterNum,1, class(Ct));
 
 tic
 for i = 1:iterNum
     
-    pd = zeros(rows,cols,slices);
+    pd = zeros(rows,cols,slices, class(Ct));
     
     % update the flow fields within each layer i=1...nlab
     
@@ -134,6 +134,11 @@ for i = 1:iterNum
         break;
     end
     
+end
+
+if(strcmp(class(u), 'gpuArray'))
+    u = gather(u);
+    erriter = gather(erriter);
 end
 
 timet = toc;

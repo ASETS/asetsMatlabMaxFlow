@@ -18,7 +18,10 @@ addpath(['..', filesep, 'maxflow']);
 addpath(['..', filesep, 'lib']);
 
 % flags
+useCUDAFLAG = 1;
 visualizationFLAG = 1;
+
+
 initType = 'spheres'; % alternatively use 'cubes', 'custom'
 
 % load image and inital regions
@@ -85,8 +88,12 @@ for it=1:maxLevelSetIterations
     % normalize Ct
     Ct = Ct - min(min(min(min(Ct))));
     
-    % call 3D max-flow optimizer
-    [u, erriter, i, timet] = asetsPotts3D_mex(single(Ct), single(alpha), single(pars));
+    % call 3D max-flow optimizer with CUDA if possible
+    if(gpuDeviceCount && useCUDAFLAG)
+        [u, erriter, i, timet] = asetsPotts3D(gpuArray(Ct), gpuArray(alpha), pars);
+    else
+        [u, erriter, i, timet] = asetsPotts3D(Ct, alpha, pars);
+    end
     
     % maj vote to discretize continuous labels
     [uu,I] = max(u, [], 4);
