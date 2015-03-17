@@ -11,17 +11,18 @@ Applications:
 [ ] - Star-shape prior application 
 
 Optimization methods: 
-[ ] - Binary Max Flow solver
+[x] - Binary Max Flow solver
 [x] - HMF optimizer 
 [x] - Pseudo-Flow optimizer
 [ ] - Co-segmentation continuous max flow solver 
 [ ] - Ishikawa model solver
-[x] - CUDA optimizers for Potts
-[ ] - CUDA optimizers for Binary MF
-[ ] - CUDA optimizers for Ishikawa
-[ ] - CUDA optimizers for HMF
+[x] - CUDA optimizer for Potts
+[x] - CUDA optimizer for Binary MF
+[ ] - CUDA optimizer for Ishikawa
+[ ] - CUDA optimizer for HMF
 
 Tests: 
+[x] - binary max flow matlab vs. mex
 [x] - Potts matlab vs. mex
 [ ] - Full flow vs pseudo-flow
 [ ] - Ishikawa vs. Potts vs. HMF
