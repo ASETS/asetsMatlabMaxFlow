@@ -8,6 +8,7 @@ mkdir(libDir)
 
 % compile
 cd(libDir);
+mex ([basePath, filesep, 'maxflow', filesep ,'asetsBinaryMF2D_mex.c']);
 mex ([basePath, filesep, 'maxflow', filesep ,'asetsPotts2D_mex.c']);
 mex ([basePath, filesep, 'maxflow', filesep ,'asetsPotts3D_mex.c']);
 cd(basePath);

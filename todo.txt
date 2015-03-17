@@ -26,6 +26,9 @@ Tests:
 [ ] - Full flow vs pseudo-flow
 [ ] - Ishikawa vs. Potts vs. HMF
 
+Features: 
+[ ] - Intialization for all optimizers
+
 
 
 
