@@ -17,7 +17,7 @@ run2DIshikawa_starShapeTestFLAG = 0;
 visualizationFLAG = 1;
 
 % parameters
-numberOfLabels = 5;
+numberOfLabels = 6;
 r = 64; % number of rows
 c = 64; % number of columns
 s = 32; % number of slices
@@ -38,7 +38,7 @@ if (run2DIshikawaTestFLAG)
     
     % for each label assign a constant regularization weight
     for i=1:(numberOfLabels-1)
-        alpha(:,:,i) = (0.15*i).*ones(r,c);
+        alpha(:,:,i) = (0.4/i).*ones(r,c);
     end
     
     % call max-flow optimizer
@@ -46,12 +46,15 @@ if (run2DIshikawaTestFLAG)
     pars = [r; c; numberOfLabels; 500; 1e-11; 0.75; 0.16];
     
     % run both 2D matlab and mex implementations
-    %[u, erriter, i, timet] = asetsIshikawa2D_mex(single(Ct), single(alpha), single(pars));
+    [u, erriter, i, timet] = asetsIshikawa2D_mex(single(Ct), single(alpha), single(pars));
     [u2, erriter2, i2, timet2] = asetsIshikawa2D(single(Ct), single(alpha), pars);
     
     
-    % maj vote to discretize continuous labels
-    %[um,I] = max(u, [], 3);
+    % threshold discretize continuous labels
+    ut = zeros(r,c);
+    for k=1:numberOfLabels-1
+        ut = ut + (u(:,:,k) > 0.5);
+    end
     
     u2t = zeros(r,c);
     for k=1:numberOfLabels-1
@@ -65,15 +68,15 @@ if (run2DIshikawaTestFLAG)
         figure();
         for i=1:(numberOfLabels-1)
             subplot(2,numberOfLabels,i); imshow(Ct(:,:,i),[]); title(['Ct_',num2str(i)]);
-            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u2(:,:,i),[0 1]); title(['u_',num2str(i)]);
+            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 1]); title(['u_',num2str(i)]);
         end
         
         % view resulting labeling functions from each implementation
         figure();
-        %subplot(1,2,1); imshow(ut,[1 numberOfLabels]);
-        subplot(1,2,2); imshow(u2t,[]);
+        subplot(1,2,1); imshow(ut,[1 numberOfLabels]);
+        subplot(1,2,2); imshow(u2t,[1 numberOfLabels]);
         
-        %disp(['Labelling error between implementations = ', num2str(sum(sum(abs(I-I2))))]);
+        disp(['Labelling error between implementations = ', num2str(sum(sum(abs(ut-u2t))))]);
     end
     colormap('jet');
     

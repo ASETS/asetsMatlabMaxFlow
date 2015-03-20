@@ -333,6 +333,10 @@ void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, 
                 int g_idx = z*Nx*Ny + x*Ny + y;
                 int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
+                if( alpha[l_idx] <= 0 ){
+                    mexErrMsgTxt("alpha(x,l) must be positive. Exiting...");
+                }
+                
                 fpt = sqrt((pow(bx[l_idx+Ny],2) + pow(bx[l_idx],2) +
                         pow(by[l_idx+1],2) + pow(by[l_idx],2) +
                         pow(bz[l_idx+(Nx*Ny)],2) + pow(bz[l_idx],2)

@@ -1,4 +1,4 @@
-function [u, erriter, i, timet] = asetsIshikawa2D_2(Ct, alpha, pars)
+function [u, erriter, i, timet] = asetsIshikawa2D(Ct, alpha, pars)
 
 %   Martin Rajchl, Imperial College London, 2015
 %
@@ -33,13 +33,13 @@ pp2 = zeros(rows+1, cols, nlab-1, class(Ct));
 erriter = zeros(iterNum,1, class(Ct));
 divp = zeros(rows,cols,nlab-1, class(Ct));
 
-[um,init] = min(Ct,[],3);
-for k=1:rows
-    for j=1:cols
-        pt(k,j,:) = Ct(k,j,init(k,j));
-        u(k,j,init(k,j):nlab-1) = 0;
-    end
-end
+% [um,init] = min(Ct,[],3);
+% for k=1:rows
+%     for j=1:cols
+%         pt(k,j,:) = Ct(k,j,init(k,j));
+%         u(k,j,init(k,j):nlab-1) = 0;
+%     end
+% end
 
 tic
 for i = 1:iterNum
@@ -58,7 +58,7 @@ for i = 1:iterNum
         gk = sqrt((pp1(:,1:cols,k).^2 + pp1(:,2:cols+1,k).^2 +...
             pp2(1:rows,:,k).^2 + pp2(2:rows+1,:,k).^2)*0.5);
         
-        gk = double(gk <= alpha(k)) + double(~(gk <= alpha(k))).*(gk ./ alpha(k));
+        gk = double(gk <= alpha(:,:,k)) + double(~(gk <= alpha(:,:,k))).*(gk ./ alpha(:,:,k));
         gk = 1 ./ gk;
         
         pp1(:,2:cols,k) = (0.5*(gk(:,2:cols) + gk(:,1:cols-1))).*pp1(:,2:cols,k);
