@@ -10,7 +10,7 @@ addpath(['..', filesep, 'maxflow']);
 addpath(['..', filesep, 'lib']);
 
 % flags
-run2DBinaryMFTestFLAG = 0;
+run2DBinaryMFTestFLAG = 1;
 run3DBinaryMFTestFLAG = 1;
 run2DBinaryMF_starShapeTestFLAG = 0;
 

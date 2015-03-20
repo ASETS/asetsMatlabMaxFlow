@@ -28,7 +28,6 @@ beta = pars(5);
 cc = pars(6);
 steps = pars(7);
 
-
 vol = rows*cols*nlab;
 
 % set the initial values:
@@ -103,12 +102,10 @@ for i = 1:iterNum
         
     end
     
-    % updata the source flow ps
-    
+    % update the source flow ps
     ps = pd / nlab + 1 / (cc*nlab);
     
     % update the multiplier u
-    
     erru_sum = 0;
     for k = 1:nlab
         erru = cc*(divp(:,:,k) + pt(:,:,k) - ps);
@@ -116,8 +113,7 @@ for i = 1:iterNum
         erru_sum = erru_sum + sum(sum(abs(erru)));
     end
     
-    % evaluate the avarage error
-    
+    % evaluate the average error  
     erriter(i) = erru_sum/vol;
     
     if erriter(i) < beta

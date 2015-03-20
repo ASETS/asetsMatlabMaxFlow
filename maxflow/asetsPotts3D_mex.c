@@ -131,9 +131,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     end_time = clock();
     
     runTime[0] = difftime(end_time, start_time)/1000000;
-    mexPrintf("\n nIt = %i\n",itNum[0]);
     
-    mexPrintf("runtime = %.4f sec\n", runTime[0]);
+    mexPrintf("potts model max flow 3D: number of iterations = %i; time = %.4f sec\n",itNum[0],runTime[0]);
     
 }
 
