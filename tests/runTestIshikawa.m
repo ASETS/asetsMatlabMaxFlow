@@ -10,9 +10,8 @@ addpath(['..', filesep, 'maxflow']);
 addpath(['..', filesep, 'lib']);
 
 % flags
-run2DIshikawaTestFLAG = 1;
-run3DIshikawaTestFLAG = 0;
-run2DIshikawa_starShapeTestFLAG = 0;
+run2DIshikawaTestFLAG = 0;
+run3DIshikawaTestFLAG = 1;
 
 visualizationFLAG = 1;
 
@@ -20,7 +19,7 @@ visualizationFLAG = 1;
 numberOfLabels = 6;
 r = 64; % number of rows
 c = 64; % number of columns
-s = 32; % number of slices
+s = 10; % number of slices
 
 if (run2DIshikawaTestFLAG)
     
@@ -102,22 +101,30 @@ if (run3DIshikawaTestFLAG)
     
     % for each label assign a constant regularization weight
     for i=1:numberOfLabels
-        alpha(:,:,:,i) = (0.05*i).*ones(r,c,s);
+        alpha(:,:,:,i) = (0.2/i).*ones(r,c,s);
     end
+    
     
     % call 3D max-flow optimizer
     
     % pars = [rows; columns; slices; numberOfLabels; maxIter; convRate; cc; stepSize];
-    pars = [r; c; s; numberOfLabels; 200; 1e-11; 0.25; 0.11];
+    pars = [r; c; s; numberOfLabels; 500; 1e-11; 0.75; 0.1];
     
     % run both 3D matlab and mex implementations
-    [u, erriter, i, timet] = asetsIshikawa3D_mex(single(Ct), single(alpha), single(pars));
+    %[u, erriter, i, timet] = asetsIshikawa3D_mex(single(Ct), single(alpha), single(pars));
     [u2, erriter2, i2, timet2] = asetsIshikawa3D(Ct, alpha, pars);
     
     
-    % maj vote to discretize continuous labels
-    [um,I] = max(u, [], 4);
-    [um,I2] = max(u2, [], 4);
+    % threshold discretize continuous labels
+%     ut = zeros(r,c,s);
+%     for k=1:numberOfLabels-1
+%         ut = ut + (u(:,:,:,k) > 0.5);
+%     end
+    
+    u2t = zeros(r,c,s);
+    for k=1:numberOfLabels-1
+        u2t = u2t + (u2(:,:,:,k) > 0.5);
+    end
     
     % visualize
     if(visualizationFLAG)
@@ -128,90 +135,26 @@ if (run3DIshikawaTestFLAG)
         vis_s = idivide(s,uint8(2));
         
         figure();
-        for i=1:(numberOfLabels)
+        for i=1:(numberOfLabels-1)
             subplot(4,numberOfLabels,i); imshow(Ct(:,:,vis_s,i),[]);
-            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u(vis_r,:,:,i)),[0 1]);
-            subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u(:,vis_c,:,i)),[0 1]);
-            subplot(4,numberOfLabels,i+3*numberOfLabels); imshow(squeeze(u(:,:,vis_s,i)),[0 1]);
+            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u2(vis_r,:,:,i)),[0 1]);
+            subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u2(:,vis_c,:,i)),[0 1]);
+            subplot(4,numberOfLabels,i+3*numberOfLabels); imshow(squeeze(u2(:,:,vis_s,i)),[0 1]);
         end
         
         % view resulting labeling functions from each implementation
         figure();
-        subplot(2,3,1); imshow(squeeze(I(vis_r,:,:)),[1 numberOfLabels]);
-        subplot(2,3,2); imshow(squeeze(I(:,vis_c,:)),[1 numberOfLabels]);
-        subplot(2,3,3); imshow(squeeze(I(:,:,vis_s)),[1 numberOfLabels]);
-        subplot(2,3,4); imshow(squeeze(I2(vis_r,:,:)),[1 numberOfLabels]);
-        subplot(2,3,5); imshow(squeeze(I2(:,vis_c,:)),[1 numberOfLabels]);
-        subplot(2,3,6); imshow(squeeze(I2(:,:,vis_s)),[1 numberOfLabels]);
+%         subplot(2,3,1); imshow(squeeze(ut(vis_r,:,:)),[1 numberOfLabels]);
+%         subplot(2,3,2); imshow(squeeze(ut(:,vis_c,:)),[1 numberOfLabels]);
+%         subplot(2,3,3); imshow(squeeze(ut(:,:,vis_s)),[1 numberOfLabels]);
+        subplot(2,3,4); imshow(squeeze(u2t(vis_r,:,:)),[1 numberOfLabels]);
+        subplot(2,3,5); imshow(squeeze(u2t(:,vis_c,:)),[1 numberOfLabels]);
+        subplot(2,3,6); imshow(squeeze(u2t(:,:,vis_s)),[1 numberOfLabels]);
         
         colormap('jet');
-        disp(['Labeling error between implementations = ', num2str(sum(sum(sum(abs(I-I2)))))]);
+%        disp(['Labeling error between implementations = ', num2str(sum(sum(sum(abs(ut-u2t)))))]);
         
     end
-end
-
-if(run2DIshikawa_starShapeTestFLAG)
-    
-    % alloc a cost function Ct for each label i, int lId
-    Ct = zeros(r,c, numberOfLabels);
-    alpha = zeros(r,c, numberOfLabels);
-    
-    % for each label assign a point the star shape is enforced towards
-    for i=1:numberOfLabels
-        ss_initPoints(i,:) = [randi([1 c]), randi([1 r])];
-    end
-    
-    % for each label assign a random data cost
-    for i=1:numberOfLabels
-        rng shuffle;
-        Ct(:,:,i) = rand(r,c);
-        h = fspecial('gaussian', [1 17], 1);
-        Ct(:,:,i) = imfilter(Ct(:,:,i),h);
-        
-    end
-    
-    % for each label assign a constant regularization weight
-    for i=1:numberOfLabels
-        alpha(:,:,i) = (0.25).*ones(r,c);
-    end
-        
-    % call max-flow optimizer
-    % pars = [rows; columns; numberOfLabels; maxIter; convRate; cc; stepSize_s, stepSize_v];
-    pars = [r; c; numberOfLabels; 1000; 1e-11; 0.2; 0.16; 0.7];
-    
-    % run both 2D matlab and mex implementations
-    [u, erriter, i, timet] = asetsIshikawa2D_starShape(Ct, alpha, pars, ss_initPoints);
-    
-    % maj vote to discretize continuous labels
-    [um,I] = max(u, [], 3);
-    
-    % visualize
-    if (visualizationFLAG)
-        
-        figure();
-        for i=1:(numberOfLabels)
-            subplot(2,numberOfLabels,i); imshow(Ct(:,:,i),[]);
-            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 1]);
-        end
-        
-        % view resulting labeling functions and init points
-        figure();
-        subplot(1,2,1); imshow(I,[1 numberOfLabels]); hold on;
-        colormap('jet');
-        for i=1:numberOfLabels
-            plot(ss_initPoints(i,1),ss_initPoints(i,2),'ob', 'MarkerSize', 10, 'MarkerFaceColor','w');
-            text(ss_initPoints(i,1),ss_initPoints(i,2),num2str(i),...
-            'FontSize',8,...
-            'HorizontalAlignment','center');
-        end
-        colorbar();
-        % plot convergence rate
-        subplot(1,2,2); loglog(erriter);
-        
-        drawnow();
-    end
-    keyboard;
-    
 end
 
 
