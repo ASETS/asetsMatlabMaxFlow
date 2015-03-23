@@ -28,7 +28,7 @@ vol = rows*cols*slices*nlab-1;
 
 % alloc the max flow buffers
 pt = zeros(rows, cols, slices, nlab, class(Ct));
-u = ones(rows, cols, slices, nlab-1, class(Ct));
+u = zeros(rows, cols, slices, nlab-1, class(Ct));
 pp1 = zeros(rows, cols+1, slices, nlab-1, class(Ct));
 pp2 = zeros(rows+1, cols, slices, nlab-1, class(Ct));
 pp3 = zeros(rows, cols, slices+1, nlab-1, class(Ct));

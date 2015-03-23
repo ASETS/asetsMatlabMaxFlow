@@ -21,6 +21,10 @@ r = 64; % number of rows
 c = 64; % number of columns
 s = 32; % number of slices
 
+maxIter = 300; % maximum number of iterations
+convErrBound2D = 1e-5; % bound at which the max flow is considered converged 
+convErrBound3D = 1e-5; % bound at which the max flow is considered converged 
+
 if (run2DBinaryMFTestFLAG)
     
     % alloc the source and sink capacities Cs and Ct 
@@ -41,11 +45,11 @@ if (run2DBinaryMFTestFLAG)
         
     % call binary max-flow optimizer
     % pars = [rows; columns; maxIter; convRate; cc; stepSize];
-    pars = [r; c; 300; 1e-11; 0.2; 0.16];
+    pars = [r; c; maxIter; convErrBound2D; 0.2; 0.16];
     
     % run both 2D matlab and mex implementations
-    [u, erriter, i, timet] = asetsBinaryMF2D_mex(single(Cs), single(Ct), single(alpha), single(pars));
-    [u2, erriter2, i2, timet2] = asetsBinaryMF2D(Cs, Ct, alpha, pars);
+    [u, erriter, numIt, timet] = asetsBinaryMF2D_mex(single(Cs), single(Ct), single(alpha), single(pars));
+    [u2, erriter2, numIt, timet2] = asetsBinaryMF2D(Cs, Ct, alpha, pars);
     
     % threshold to discretize continuous labels
     I = u > 0.5;
@@ -64,6 +68,12 @@ if (run2DBinaryMFTestFLAG)
         subplot(2,2,4); imshow(I2,[0 1]); title('u_{Matlab}')
         
         disp(['Labelling error between implementations = ', num2str(sum(sum(abs(I-I2))))]);
+        
+        % convergence plots
+        figure(); 
+        subplot(1,2,1); loglog(erriter); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence mex/C');
+        subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
+        
     end
     colormap('gray');
     
@@ -92,7 +102,7 @@ if (run3DBinaryMFTestFLAG)
     % call 3D max-flow optimizer
     
     % pars = [rows; columns; slices; numberOfLabels; maxIter; convRate; cc; stepSize];
-    pars = [r; c; s; 300; 1e-11; 0.25; 0.11];
+    pars = [r; c; s; maxIter; convErrBound3D; 0.25; 0.11];
     
     % run both 3D matlab and mex implementations
     [u, erriter, i, timet] = asetsBinaryMF3D_mex(single(Cs), single(Ct), single(alpha), single(pars));
@@ -128,6 +138,12 @@ if (run3DBinaryMFTestFLAG)
         subplot(3,4,12); imshow(squeeze(I2(:,:,vis_s)),[]); 
         
         disp(['Labelling error between implementations = ', num2str(sum(sum(sum(abs(I-I2)))))]);
+        
+        % convergence plots
+        figure(); 
+        subplot(1,2,1); loglog(erriter); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence mex/C');
+        subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
+        
     end
     colormap('gray');
 end

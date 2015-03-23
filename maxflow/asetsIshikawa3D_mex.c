@@ -1,16 +1,11 @@
 /*  Martin Rajchl, Imperial College London, 2015
  *
- * Re-implementation with of [1] with a horizontal model
- * according to [2]
+ * Re-implementation with of [1]
  *
- * [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boykov, Y.
- * A Continuous Max-Flow Approach to Potts Model
- * ECCV, 2010
- *
- * [2] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM.
- * A Continuous Max-Flow Approach to General
- * Hierarchical Multi-Labelling Problems
- * arXiv preprint arXiv:1404.0336
+ * [1] Rajchl M., J. Yuan, E. Ukwatta, and T. Peters (2012).
+ *     Fast Interactive Multi-Region Cardiac Segmentation With
+ *     Linearly Ordered Labels.
+ *     ISBI, 2012. pp.1409–1412.
  */
 
 #include <stdio.h>
@@ -19,6 +14,9 @@
 #include <math.h>
 #include <time.h>
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 void runMaxFlow( float *alpha, float *Ct,
         int Nx, int Ny, int Nz, int nLab, int maxIt,
         float errbound, float cc, float steps,
@@ -26,7 +24,7 @@ void runMaxFlow( float *alpha, float *Ct,
 
 void init();
 
-void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id);
+void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id);
 void updatePX(float *gk, float *bx, int Nx, int Ny, int Nz, float steps, int lbl_id);
 void updatePY(float *gk, float *by, int Nx, int Ny, int Nz, float steps, int lbl_id);
 void updatePZ(float *gk, float *bz, int Nx, int Ny, int Nz, float steps, int lbl_id);
@@ -34,8 +32,11 @@ void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, 
 void updateBX(float *bx, float *gk, int Nx, int Ny, int Nz, int lbl_id);
 void updateBY(float *by, float *gk, int Nx, int Ny, int Nz, int lbl_id);
 void updateBZ(float *bz, float *gk, int Nx, int Ny, int Nz, int lbl_id);
-void updatePTDIV(float *dv, float *bx, float *by, float *bz, float *ps, float *u, float *pt, float *Ct, int Nx, int Ny, int Nz, float cc, int lbl_id);
-float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int Nz, int nLab, float cc);
+void updateDIV(float *dv, float *bx, float *by, float *bz, int Nx, int Ny, int Nz, float cc, int lbl_id);
+void updateTopLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int Nx,  int Ny, int Nz, float cc, int lbl_id);
+void updateMidLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int Nx,  int Ny, int Nz, float cc, int lbl_id);
+void updateBottomLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int Nx,  int Ny, int Nz, float cc, int lbl_id);
+float updateU(float *dv, float *pt, float *u, int Nx, int Ny, int Nz, int nLab, float cc);
 
 extern void mexFunction(int iNbOut, mxArray *pmxOut[],
         int iNbIn, const mxArray *pmxIn[])
@@ -49,9 +50,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     float *u, *cvg;
     int *itNum;
     double *runTime;
-    
-    int dim[4];
     int nDim;
+    int dim[4];
     
     /* others */
     time_t  start_time, end_time;
@@ -68,7 +68,7 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
      *pfVecParameters Setting
      * [0] : number of columns
      * [1] : number of rows
-     * [2] : number of slices
+     * [2] : number of rows
      * [3] : number of labels
      * [4] : the maximum iteration number
      * [5] : error criterion
@@ -91,9 +91,9 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     dim[0] = Ny;
     dim[1] = Nx;
     dim[2] = Nz;
-    dim[3] = nLab;
+    dim[3] = nLab-1;
     nDim = 4;
-        
+    
     pmxOut[0] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     u = mxGetData(pmxOut[0]);
     
@@ -132,7 +132,7 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     
     runTime[0] = difftime(end_time, start_time)/1000000;
     
-    mexPrintf("potts model max flow 3D: number of iterations = %i; time = %.4f sec\n",itNum[0],runTime[0]);
+    mexPrintf("ishikawa model max flow 3D: number of iterations = %i; time = %.4f sec\n",itNum[0],runTime[0]);
     
 }
 
@@ -143,55 +143,70 @@ void runMaxFlow( float *alpha, float *Ct,
         float *u, float *cvg, int *itNum){
     
     
-    float   *bx, *by, *bz, *dv, *gk, *ps, *pt;
+    float   *bx, *by, *bz, *dv, *gk, *pt;
     int i;
     float total_err;
     
     /* alloc buffers */
-    bx = (float *) calloc( (unsigned)((Nx+1)*Ny*Nz*nLab), sizeof(float) );
-    by = (float *) calloc( (unsigned)(Nx*(Ny+1)*Nz*nLab), sizeof(float) );
-    bz = (float *) calloc( (unsigned)(Nx*Ny*(Nz+1)*nLab), sizeof(float) );
-    dv = (float *) calloc( (unsigned)(Nx*Ny*Nz*nLab), sizeof(float) );
+    bx = (float *) calloc( (unsigned)((Nx+1)*Ny*Nz*(nLab-1)), sizeof(float) );
+    by = (float *) calloc( (unsigned)(Nx*(Ny+1)*Nz*(nLab-1)), sizeof(float) );
+    bz = (float *) calloc( (unsigned)(Nx*Ny*(Nz+1)*(nLab-1)), sizeof(float) );
+    dv = (float *) calloc( (unsigned)(Nx*Ny*Nz*(nLab-1)), sizeof(float) );
     gk = (float *) calloc( (unsigned)(Nx*Ny*Nz), sizeof(float) );
-    ps = (float *) calloc( (unsigned)(Nx*Ny*Nz), sizeof(float) );
     pt = (float *) calloc( (unsigned)(Nx*Ny*Nz*nLab), sizeof(float) );
-    if (!(bx || by || bz || dv || gk || ps || pt))
+    if (!(bx || by || bz || dv || gk || pt))
         mexPrintf("malloc error.\n");
     
     init();
-    
     
     /* iterate */
     i = 0;
     for (i = 0; i < maxIt; i++){
         
         int k = 0;
-        for (k = 0; k < nLab; k++){
+        for (k = 0; k < (nLab-1); k++){
             
             /* update the spatial flow field p(x,lbl) = (bx(x,lbl),by(x,lbl)) */
-            updateP1(gk, dv, ps, pt, u, Nx, Ny, Nz, cc, k);
+            updateP1(gk, dv, pt, u, Nx, Ny, Nz, cc, k);
             updatePX(gk, bx, Nx, Ny, Nz, steps, k);
             updatePY(gk, by, Nx, Ny, Nz, steps, k);
             updatePZ(gk, bz, Nx, Ny, Nz, steps, k);
             
             /* projection step to make |p(x,i)| <= alpha(x,lbl)*/
             projStep(bx, by, bz, alpha, gk, Nx, Ny, Nz, k);
-                        
+            
+            
             /* update the component bx, by */
             updateBX(bx, gk, Nx, Ny, Nz, k);
             updateBY(by, gk, Nx, Ny, Nz, k);
             updateBZ(bz, gk, Nx, Ny, Nz, k);
             
-            /* update the sink flow field pt(x,lbl) pd and div(x,lbl)  */
-            updatePTDIV(dv, bx, by, bz, ps, u, pt, Ct, Nx, Ny, Nz, cc, k);
+            /* div(x,lbl)  */
+            updateDIV(dv, bx, by, bz, Nx, Ny, Nz, cc, k);
         }
         
-        /* update ps(x) and the multiplier/labeling functions u(x,lbl) */
-        total_err = updatePSU(dv, pt, u, ps, Nx, Ny, Nz, nLab, cc);
+        for (k = 0; k < nLab; k++){
+            
+            if (k == 0){
+                updateBottomLayerPT(gk, dv, pt, u, Ct, Nx, Ny, Nz, cc, k);
+            }
+            else if ((k >= 1) && ( k < (nLab-1) )){
+                updateMidLayerPT(gk, dv, pt, u, Ct, Nx, Ny, Nz, cc, k);
+            }
+            else{
+                updateTopLayerPT(gk, dv, pt, u, Ct, Nx, Ny, Nz, cc, k);
+            }
+            
+        }
+        
+        
+        /* multiplier/labeling functions u(x,lbl) */
+        total_err = updateU(dv, pt, u, Nx, Ny, Nz, nLab, cc);
+        
         
         /* evaluate the convergence error */
-        cvg[i] = total_err / (float)(Nx*Ny*Nz*nLab);
-        /*mexPrintf("it= %d, cvg = %f\n", i,cvg[i] ); */
+        cvg[i] = total_err / (float)(Nx*Ny*Nz*(nLab-1));
+        /* mexPrintf("it= %d, cvg = %f\n", i,cvg[i] ); */
         
         /* check if converged */
         if (cvg[i] <= errBound)
@@ -207,7 +222,6 @@ void runMaxFlow( float *alpha, float *Ct,
     free( (float *) bz );
     free( (float *) dv );
     free( (float *) gk );
-    free( (float *) ps );
     free( (float *) pt );
     
 }
@@ -235,39 +249,47 @@ void init(){
      */
 }
 
-void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id){
+void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id){
     
     int x = 0;
     int y = 0;
     int z = 0;
     
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for (x=0; x < Nx; x++){
             for (y=0; y < Ny; y++){
-                    
-                int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
-                gk[g_idx] = dv[l_idx] - (ps[g_idx]
-                        - pt[l_idx] + u[l_idx]/cc);
-               
+                int g_idx = z*Nx*Ny + x*Ny + y;
+                int l_idx = g_idx + lbl_id*graphSize;
+                
+                gk[g_idx] = dv[l_idx] - (pt[l_idx]
+                        - pt[l_idx+graphSize] + u[l_idx]/cc);
+                
+                if(!finite(gk[g_idx]))
+                    mexErrMsgTxt("Caught gk !finite. Exiting...");
+                
             }
         }
     }
 }
+
 
 void updatePX(float *gk, float *bx, int Nx, int Ny, int Nz, float steps, int lbl_id){
     
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for (x=1; x < Nx; x++){
             for (y=0; y < Ny; y++){
                 
                 
                 int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                int l_idx = g_idx + lbl_id*graphSize;
                 
                 bx[l_idx] = steps*(gk[g_idx] - gk[g_idx-Ny]) + bx[l_idx];
                 
@@ -282,54 +304,58 @@ void updatePY(float *gk, float *by, int Nx, int Ny, int Nz, float steps, int lbl
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for(x = 0; x < Nx; x ++){
             for(y = 1; y < Ny; y++){
                 
                 
                 int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                int l_idx = g_idx + lbl_id*graphSize;
                 
                 by[l_idx] = steps*(gk[g_idx] - gk[g_idx-1]) + by[l_idx];
                 
             }
         }
     }
-     }
+}
 
 void updatePZ(float *gk, float *bz, int Nx, int Ny, int Nz, float steps, int lbl_id){
     
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=1; z < Nz; z++){
         for(x = 0; x < Nx; x ++){
             for(y = 0; y < Ny; y++){
                 
                 
                 int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                int l_idx = g_idx + lbl_id*graphSize;
                 
                 bz[l_idx] = steps*(gk[g_idx] - gk[g_idx-(Nx*Ny)]) + bz[l_idx];
             }
         }
     }
 }
-
-
 void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     
     float fpt;
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for (x=0; x< Nx; x++){
             for (y=0; y< Ny; y++){
                 
                 
                 int g_idx = z*Nx*Ny + x*Ny + y;
-                int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                int l_idx = g_idx + lbl_id*graphSize;
                 
                 if( alpha[l_idx] <= 0 ){
                     mexErrMsgTxt("alpha(x,l) must be positive. Exiting...");
@@ -346,10 +372,14 @@ void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, 
                     fpt = 1;
                 
                 gk[g_idx] = 1/fpt;
+                
+                if(!finite(gk[g_idx]))
+                    mexErrMsgTxt("Caught gk !finite. Exiting...");
             }
         }
     }
 }
+
 
 void updateBX(float *bx, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     
@@ -358,13 +388,15 @@ void updateBX(float *bx, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for (x=1; x< Nx; x++){
             for (y=0; y< Ny; y++){
                 
                 
                 g_idx = z*Nx*Ny + x*Ny + y;
-                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                l_idx = g_idx + lbl_id*graphSize;
                 
                 bx[l_idx] = (gk[g_idx] + gk[g_idx-Ny])
                 *0.5*bx[l_idx];
@@ -380,13 +412,15 @@ void updateBY(float *by, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for (x=0; x<Nx; x++){
             for (y=1; y< Ny; y++){
                 
                 
                 g_idx = z*Nx*Ny + x*Ny + y;
-                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                l_idx = g_idx + lbl_id*graphSize;
                 
                 by[l_idx] = 0.5*(gk[g_idx-1] + gk[g_idx])
                 *by[l_idx];
@@ -401,13 +435,15 @@ void updateBZ(float *bz, float *gk, int Nx, int Ny, int Nz, int lbl_id){
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=1; z < Nz; z++){
         for (x=0; x<Nx; x++){
             for (y=0; y< Ny; y++){
                 
                 
                 g_idx = z*Nx*Ny + x*Ny + y;
-                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                l_idx = g_idx + lbl_id*graphSize;
                 
                 bz[l_idx] = 0.5*(gk[g_idx-(Nx*Ny)] + gk[g_idx])
                 *bz[l_idx];
@@ -415,7 +451,8 @@ void updateBZ(float *bz, float *gk, int Nx, int Ny, int Nz, int lbl_id){
         }
     }
 }
-void updatePTDIV(float *dv, float *bx, float *by, float *bz, float *ps, float *u, float *pt, float *Ct, int Nx, int Ny, int Nz, float cc, int lbl_id){
+
+void updateDIV(float *dv, float *bx, float *by, float *bz, int Nx, int Ny, int Nz, float cc, int lbl_id){
     
     float fpt;
     int g_idx;
@@ -423,42 +460,129 @@ void updatePTDIV(float *dv, float *bx, float *by, float *bz, float *ps, float *u
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
     for (z=0; z < Nz; z++){
         for (x=0; x< Nx; x++){
             for (y=0; y< Ny; y++){
                 
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*graphSize;
+                
+                /* update the divergence field dv(x,l)  */
+                dv[l_idx] = by[l_idx+1] - by[l_idx]
+                        + bx[l_idx+Ny] - bx[l_idx]
+                        + bz[l_idx+(Nx*Ny)] - bz[l_idx];
+                
+                if(!finite(dv[l_idx])){
+                    mexErrMsgTxt("Caught div !finite. Exiting...");
+                }
+            }
+        }
+    }
+    
+}
+
+void updateBottomLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int Nx,  int Ny, int Nz, float cc, int lbl_id){
+    
+    float fpt = 0;
+    int g_idx;
+    int l_idx;
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
+    for (z=0; z < Nz; z++){
+        for (x=0; x< Nx; x++){
+            for (y=0; y< Ny; y++){
                 
                 g_idx = z*Nx*Ny + x*Ny + y;
                 l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
-                /* update the divergence field dv(x,l)  */
-                dv[l_idx] = by[l_idx+1] - by[l_idx] +
-                        bx[l_idx+Ny] - bx[l_idx] +
-                        bz[l_idx+(Nx*Ny)] - bz[l_idx];
+                /* update pt(x,l)  */
+                fpt = dv[l_idx] + pt[l_idx+graphSize] - u[l_idx] + 1/cc;
+                pt[l_idx] = MIN(fpt, Ct[l_idx]);
                 
-                fpt = ps[g_idx] + u[l_idx]/cc - dv[l_idx];
                 
-                if (fpt < Ct[l_idx])
-                    pt[l_idx] = fpt;
-                else
-                    pt[l_idx] = Ct[l_idx];
+                if(!finite(fpt))
+                    mexErrMsgTxt("Caught pt bl !finite. Exiting...");
                 
             }
         }
     }
 }
 
-
-float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int Nz, int nLab, float cc){
+void updateMidLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int Nx,  int Ny, int Nz, float cc, int lbl_id){
     
+    float fpt = 0;
     int g_idx;
     int l_idx;
-    int l;
-    float fpt;
-    float* ft = malloc(sizeof(float)*nLab);
     int x = 0;
     int y = 0;
     int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
+    for (z=0; z < Nz; z++){
+        for (x=0; x< Nx; x++){
+            for (y=0; y< Ny; y++){
+                
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                
+                /* update pt(x,l)  */
+                fpt =  - dv[l_idx-graphSize] + pt[l_idx-graphSize] + u[l_idx-graphSize]/cc;
+                fpt +=   dv[l_idx] + pt[l_idx+graphSize] - u[l_idx]/cc;
+                fpt /= 2.0f;
+                
+                pt[l_idx] = MIN(fpt, Ct[l_idx]);
+                
+                if(!finite(fpt))
+                    mexErrMsgTxt("Caught pt ml !finite. Exiting...");
+                
+            }
+        }
+    }
+}
+
+void updateTopLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int Nx,  int Ny, int Nz, float cc, int lbl_id){
+    
+    float fpt = 0;
+    int g_idx;
+    int l_idx;
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    int graphSize = Nx*Ny*Nz;
+    
+    for (z=0; z < Nz; z++){
+        for (x=0; x< Nx; x++){
+            for (y=0; y< Ny; y++){
+                
+                g_idx = z*Nx*Ny + x*Ny + y;
+                l_idx = g_idx + lbl_id*Nx*Ny*Nz;
+                
+                /* update pt(x,l)  */
+                fpt = - dv[l_idx-graphSize] + pt[l_idx-graphSize] + u[l_idx-graphSize]/cc;
+                pt[l_idx] = MIN(fpt, Ct[l_idx]);
+                
+                if(!finite(fpt))
+                    mexErrMsgTxt("Caught pt tl !finite. Exiting...");
+            }
+        }
+    }
+}
+
+
+float updateU(float *dv, float *pt, float *u, int Nx, int Ny, int Nz, int nLab, float cc){
+    
+    float fpt;
+    int l;
+    int g_idx;
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    int graphSize = Nx*Ny*Nz;
     
     float erru = 0;
     
@@ -470,31 +594,34 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int N
                 
                 fpt = 0;
                 
-                for (l = 0; l < nLab; l++){
-                    l_idx = g_idx + l*(Nx*Ny*Nz);
-                    
-                    ft[l] = dv[l_idx] + pt[l_idx];
-                    
-                    fpt += (ft[l] - u[l_idx]/cc);
-                    
-                }
-                
-                ps[g_idx] = fpt/nLab + 1/(cc*nLab);
-                
                 /* update the multipliers u(x,l) */
-                for (l = 0; l < nLab; l++){
-                    l_idx = g_idx + l*(Nx*Ny*Nz);
+                for (l = 0; l < (nLab-1); l++){
+                    fpt = cc*(dv[g_idx+l*graphSize] + pt[g_idx+((l+1)*graphSize)] - pt[g_idx+l*graphSize]);
                     
-                    fpt = cc*(ft[l] - ps[g_idx]);
-                    u[l_idx] -= fpt;
+                    u[g_idx+l*graphSize] -= fpt;
                     erru += fabsf(fpt);
                     
+                    if(!finite(pt[g_idx+((l+1)*graphSize)]))
+                        mexErrMsgTxt("Caught pt+1 !finite. Exiting...");
+                    
+                    if(!finite(pt[g_idx+(l*graphSize)]))
+                        mexErrMsgTxt("Caught pt !finite. Exiting...");
+                    
+                    if(!finite(dv[g_idx+l*graphSize]))
+                        mexErrMsgTxt("Caught dv !finite. Exiting...");
+                    
+                    if(!finite(cc))
+                        mexErrMsgTxt("Caught cc !finite. Exiting...");
+                    
+                    if(!finite(fpt)){
+                        mexPrintf("%.2f, %.2f, %.2f, %.2f, %.2f", pt[g_idx+((l+1)*graphSize)], pt[g_idx+(l*graphSize)], dv[g_idx+l*graphSize], cc, fpt);
+                        mexErrMsgTxt("Caught fpt !finite. Exiting...");
+                    }
+                    
                 }
-                
             }
         }
     }
-    free(ft);
     return erru;
 }
 

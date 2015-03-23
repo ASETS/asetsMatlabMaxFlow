@@ -22,6 +22,10 @@ r = 64; % number of rows
 c = 64; % number of columns
 s = 32; % number of slices
 
+maxIter = 300; % maximum number of iterations
+convErrBound2D = 1e-5; % bound at which the max flow is considered converged 
+convErrBound3D = 1e-5; % bound at which the max flow is considered converged 
+
 if (run2DPottsTestFLAG)
     
     % alloc a cost function Ct for each label i, int lId
@@ -43,7 +47,7 @@ if (run2DPottsTestFLAG)
     
     % call max-flow optimizer
     % pars = [rows; columns; numberOfLabels; maxIter; convRate; cc; stepSize];
-    pars = [r; c; numberOfLabels; 200; 1e-11; 0.2; 0.16];
+    pars = [r; c; numberOfLabels; maxIter; convErrBound2D; 0.2; 0.16];
     
     % run both 2D matlab and mex implementations
     [u, erriter, i, timet] = asetsPotts2D_mex(single(Ct), single(alpha), single(pars));
@@ -60,7 +64,7 @@ if (run2DPottsTestFLAG)
         figure();
         for i=1:(numberOfLabels)
             subplot(2,numberOfLabels,i); imshow(Ct(:,:,i),[]);
-            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 1]);
+            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 max(u(:))]);
         end
         
         % view resulting labeling functions from each implementation
@@ -68,7 +72,18 @@ if (run2DPottsTestFLAG)
         subplot(1,2,1); imshow(I,[1 numberOfLabels]);
         subplot(1,2,2); imshow(I2,[1 numberOfLabels]);
         
-        disp(['Labelling error between implementations = ', num2str(sum(sum(abs(I-I2))))]);
+        implErr = 0;
+        for i = 1:numberOfLabels
+            implErr = implErr + sum(sum(abs((I == i) - (I2 == i))));
+        end
+        disp(['Labeling error between implementations = ', num2str(implErr)]);
+        
+        % convergence plots
+        figure(); 
+        subplot(1,2,1); loglog(erriter); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence mex/C');
+        subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
+        
+        
     end
     colormap('jet');
     
@@ -94,17 +109,17 @@ if (run3DPottsTestFLAG)
     
     % for each label assign a constant regularization weight
     for i=1:numberOfLabels
-        alpha(:,:,:,i) = (0.05*i).*ones(r,c,s);
+        alpha(:,:,:,i) = (0.025*i).*ones(r,c,s);
     end
     
     % call 3D max-flow optimizer
     
     % pars = [rows; columns; slices; numberOfLabels; maxIter; convRate; cc; stepSize];
-    pars = [r; c; s; numberOfLabels; 200; 1e-11; 0.25; 0.11];
+    pars = [r; c; s; numberOfLabels; maxIter; convErrBound3D; 0.25; 0.11];
     
     % run both 3D matlab and mex implementations
     [u, erriter, i, timet] = asetsPotts3D_mex(single(Ct), single(alpha), single(pars));
-    [u2, erriter2, i2, timet2] = asetsPotts3D(Ct, alpha, pars);
+    [u2, erriter2, i2, timet2] = asetsPotts3D(single(Ct), single(alpha), single(pars));
     
     
     % maj vote to discretize continuous labels
@@ -122,9 +137,9 @@ if (run3DPottsTestFLAG)
         figure();
         for i=1:(numberOfLabels)
             subplot(4,numberOfLabels,i); imshow(Ct(:,:,vis_s,i),[]);
-            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u(vis_r,:,:,i)),[0 1]);
-            subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u(:,vis_c,:,i)),[0 1]);
-            subplot(4,numberOfLabels,i+3*numberOfLabels); imshow(squeeze(u(:,:,vis_s,i)),[0 1]);
+            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u(vis_r,:,:,i)),[0 max(u(:))]);
+            subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u(:,vis_c,:,i)),[0 max(u(:))]);
+            subplot(4,numberOfLabels,i+3*numberOfLabels); imshow(squeeze(u(:,:,vis_s,i)),[0 max(u(:)) ]);
         end
         
         % view resulting labeling functions from each implementation
@@ -137,7 +152,16 @@ if (run3DPottsTestFLAG)
         subplot(2,3,6); imshow(squeeze(I2(:,:,vis_s)),[1 numberOfLabels]);
         
         colormap('jet');
-        disp(['Labeling error between implementations = ', num2str(sum(sum(sum(abs(I-I2)))))]);
+        implErr = 0;
+        for i = 1:numberOfLabels
+            implErr = implErr + sum(sum(sum(abs((I == i) - (I2 == i)))));
+        end
+        disp(['Labeling error between implementations = ', num2str(implErr)]);
+        
+         % convergence plots
+        figure(); 
+        subplot(1,2,1); loglog(erriter); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence mex/C');
+        subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
         
     end
 end
@@ -202,10 +226,8 @@ if(run2DPotts_starShapeTestFLAG)
         
         drawnow();
     end
-    keyboard;
     
 end
-
 
 end
 

@@ -43,15 +43,16 @@ vol = rows*cols*nlab;
 
 u = zeros(rows,cols,nlab, class(Ct));
 pt = zeros(rows,cols,nlab, class(Ct));
+ps = zeros(rows,cols, class(Ct));
 
-[ps,I] = min(Ct, [], 3);
-
-for k=1:rows
-    for j=1:cols
-        pt(k,j,:) = ps(k,j);
-        u(k,j,I(k,j)) = 1;
-    end
-end
+% [ps,I] = min(Ct, [], 3);
+% 
+% for k=1:rows
+%     for j=1:cols
+%         pt(k,j,:) = ps(k,j);
+%         u(k,j,I(k,j)) = 1;
+%     end
+% end
 
 divp = zeros(rows,cols,nlab, class(Ct));
 

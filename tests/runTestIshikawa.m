@@ -10,7 +10,7 @@ addpath(['..', filesep, 'maxflow']);
 addpath(['..', filesep, 'lib']);
 
 % flags
-run2DIshikawaTestFLAG = 0;
+run2DIshikawaTestFLAG = 1;
 run3DIshikawaTestFLAG = 1;
 
 visualizationFLAG = 1;
@@ -20,6 +20,10 @@ numberOfLabels = 6;
 r = 64; % number of rows
 c = 64; % number of columns
 s = 10; % number of slices
+
+maxIter = 1000; % maximum number of max flow iterations
+convErrBound2D = 1e-5; % bound at which the max flow is considered converged 
+convErrBound3D = 1e-5; % bound at which the max flow is considered converged 
 
 if (run2DIshikawaTestFLAG)
     
@@ -37,16 +41,16 @@ if (run2DIshikawaTestFLAG)
     
     % for each label assign a constant regularization weight
     for i=1:(numberOfLabels-1)
-        alpha(:,:,i) = (0.4/i).*ones(r,c);
+        alpha(:,:,i) = (0.6/i).*ones(r,c);
     end
     
     % call max-flow optimizer
     % pars = [rows; columns; numberOfLabels; maxIter; convRate; cc; stepSize];
-    pars = [r; c; numberOfLabels; 500; 1e-11; 0.75; 0.16];
+    pars = [r; c; numberOfLabels; maxIter; convErrBound2D; 0.75; 0.16];
     
     % run both 2D matlab and mex implementations
     [u, erriter, i, timet] = asetsIshikawa2D_mex(single(Ct), single(alpha), single(pars));
-    [u2, erriter2, i2, timet2] = asetsIshikawa2D(single(Ct), single(alpha), pars);
+    [u2, erriter2, i2, timet2] = asetsIshikawa2D(single(Ct), single(alpha), single(pars));
     
     
     % threshold discretize continuous labels
@@ -59,23 +63,35 @@ if (run2DIshikawaTestFLAG)
     for k=1:numberOfLabels-1
         u2t = u2t + (u2(:,:,k) > 0.5);
     end
-
+    
     
     % visualize
     if (visualizationFLAG)
         
         figure();
         for i=1:(numberOfLabels-1)
-            subplot(2,numberOfLabels,i); imshow(Ct(:,:,i),[]); title(['Ct_',num2str(i)]);
-            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 1]); title(['u_',num2str(i)]);
+            subplot(3,numberOfLabels,i); imshow(Ct(:,:,i),[]); title(['Ct_',num2str(i)]);
+            subplot(3,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 1]); title(['mex/C: u_',num2str(i)]);
+            subplot(3,numberOfLabels,i+2*numberOfLabels); imshow(u2(:,:,i),[0 1]); title(['Matlab/CUDA: u_',num2str(i)]);
         end
         
         % view resulting labeling functions from each implementation
         figure();
-        subplot(1,2,1); imshow(ut,[1 numberOfLabels]);
-        subplot(1,2,2); imshow(u2t,[1 numberOfLabels]);
+        subplot(1,2,1); imshow(ut,[1 numberOfLabels]); title('mex/C: u_{discrete}');
+        subplot(1,2,2); imshow(u2t,[1 numberOfLabels]); title('Matlab/CUDA: u_{discrete}');
         
-        disp(['Labelling error between implementations = ', num2str(sum(sum(abs(ut-u2t))))]);
+        implErr = 0;
+        for i = 1:(numberOfLabels-1)
+            implErr = implErr + sum(sum(abs((ut == i) - (u2t == i))));
+        end
+        disp(['Labeling error between implementations = ', num2str(implErr)]);
+        
+        % convergence plots
+        figure();
+        subplot(1,2,1); loglog(erriter); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence mex/C');
+        subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
+        
+        
     end
     colormap('jet');
     
@@ -108,18 +124,18 @@ if (run3DIshikawaTestFLAG)
     % call 3D max-flow optimizer
     
     % pars = [rows; columns; slices; numberOfLabels; maxIter; convRate; cc; stepSize];
-    pars = [r; c; s; numberOfLabels; 500; 1e-11; 0.75; 0.1];
+    pars = [r; c; s; numberOfLabels; maxIter; convErrBound3D; 0.75; 0.1];
     
     % run both 3D matlab and mex implementations
-    %[u, erriter, i, timet] = asetsIshikawa3D_mex(single(Ct), single(alpha), single(pars));
-    [u2, erriter2, i2, timet2] = asetsIshikawa3D(Ct, alpha, pars);
+    [u, erriter, i, timet] = asetsIshikawa3D_mex(single(Ct), single(alpha), single(pars));
+    [u2, erriter2, i2, timet2] = asetsIshikawa3D(single(Ct), single(alpha), single(pars));
     
     
     % threshold discretize continuous labels
-%     ut = zeros(r,c,s);
-%     for k=1:numberOfLabels-1
-%         ut = ut + (u(:,:,:,k) > 0.5);
-%     end
+    ut = zeros(r,c,s);
+    for k=1:numberOfLabels-1
+        ut = ut + (u(:,:,:,k) > 0.5);
+    end
     
     u2t = zeros(r,c,s);
     for k=1:numberOfLabels-1
@@ -136,25 +152,34 @@ if (run3DIshikawaTestFLAG)
         
         figure();
         for i=1:(numberOfLabels-1)
-            subplot(4,numberOfLabels,i); imshow(Ct(:,:,vis_s,i),[]);
-            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u2(vis_r,:,:,i)),[0 1]);
-            subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u2(:,vis_c,:,i)),[0 1]);
-            subplot(4,numberOfLabels,i+3*numberOfLabels); imshow(squeeze(u2(:,:,vis_s,i)),[0 1]);
+            subplot(4,numberOfLabels,i); imshow(Ct(:,:,vis_s,i),[]); title(['Ct_',num2str(i)]);
+            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u(:,:,vis_s,i)),[0 1]); title(['mex/C: u_',num2str(i)]);
+            subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u2(:,:,vis_s,i)),[0 1]); title(['Matlab/CUDA: u_',num2str(i)]);
         end
         
         % view resulting labeling functions from each implementation
         figure();
-%         subplot(2,3,1); imshow(squeeze(ut(vis_r,:,:)),[1 numberOfLabels]);
-%         subplot(2,3,2); imshow(squeeze(ut(:,vis_c,:)),[1 numberOfLabels]);
-%         subplot(2,3,3); imshow(squeeze(ut(:,:,vis_s)),[1 numberOfLabels]);
-        subplot(2,3,4); imshow(squeeze(u2t(vis_r,:,:)),[1 numberOfLabels]);
+        subplot(2,3,1); imshow(squeeze(ut(vis_r,:,:)),[1 numberOfLabels]); title('mex/C: u_{discrete}');
+        subplot(2,3,2); imshow(squeeze(ut(:,vis_c,:)),[1 numberOfLabels]);
+        subplot(2,3,3); imshow(squeeze(ut(:,:,vis_s)),[1 numberOfLabels]);
+        subplot(2,3,4); imshow(squeeze(u2t(vis_r,:,:)),[1 numberOfLabels]); title('Matlab/CUDA: u_{discrete}');
         subplot(2,3,5); imshow(squeeze(u2t(:,vis_c,:)),[1 numberOfLabels]);
         subplot(2,3,6); imshow(squeeze(u2t(:,:,vis_s)),[1 numberOfLabels]);
         
         colormap('jet');
-%        disp(['Labeling error between implementations = ', num2str(sum(sum(sum(abs(ut-u2t)))))]);
+        implErr = 0;
+        for i = 1:(numberOfLabels-1)
+            implErr = implErr + sum(sum(sum(abs((ut == i) - (u2t == i)))));
+        end
+        disp(['Labeling error between implementations = ', num2str(implErr)]);
+        
+        % convergence plots
+        figure();
+        subplot(1,2,1); loglog(erriter); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence mex/C');
+        subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
         
     end
+    keyboard;
 end
 
 

@@ -94,8 +94,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     
     /* outputs the convergence rate  */
     nDim = 2;
-    dim[0] = 1;
-    dim[1] = maxIt;
+    dim[0] = maxIt;
+    dim[1] = 1;
     pmxOut[1] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     cvg = mxGetData(pmxOut[1]);
     
@@ -196,15 +196,13 @@ void runMaxFlow( float *alpha, float *Ct,
         /* multiplier/labeling functions u(x,lbl) */
         total_err = updateU(dv, pt, u, Nx, Ny, nLab, cc);
         
-        /* to be implemented */
         /* evaluate the convergence error */
-        /*cvg[i] = total_err / (float)(Nx*Ny*nLab); */
+        cvg[i] = total_err / (float)(Nx*Ny*(nLab-1)); 
         /*mexPrintf("it= %d, cvg = %f\n", i,cvg[i] ); */
         
-        /*
-         * if (cvg[i] <= errBound)
-         * break;
-         */
+        /* check if converged */
+        if (cvg[i] <= errBound)
+            break;
         
     }
     /* update iteration number */
@@ -477,7 +475,7 @@ float updateU(float *dv, float *pt, float *u, int Nx, int Ny, int nLab, float cc
                 fpt = cc*(dv[g_idx+l*Nx*Ny] + pt[g_idx+((l+1)*Nx*Ny)] - pt[g_idx+l*Nx*Ny]);
                 
                 u[g_idx+l*Nx*Ny] -= fpt;
-                erru += abs(fpt);
+                erru += fabsf(fpt);
                 
                 if(!finite(pt[g_idx+((l+1)*Nx*Ny)]))
                     mexErrMsgTxt("Caught pt+1 !finite. Exiting...");

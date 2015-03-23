@@ -96,8 +96,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     
     /* outputs the convergence rate  */
     nDim = 2;
-    dim[0] = 1;
-    dim[1] = maxIt;
+    dim[0] = maxIt;
+    dim[1] = 1;
     pmxOut[1] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     cvg = mxGetData(pmxOut[1]);
     
@@ -187,13 +187,12 @@ void runMaxFlow( float *alpha, float *Ct,
                 
         /* to be implemented */
         /* evaluate the convergence error */
-        /*cvg[i] = total_err / (float)(Nx*Ny*nLab); */
+        cvg[i] = total_err / (float)(Nx*Ny*nLab);
         /*mexPrintf("it= %d, cvg = %f\n", i,cvg[i] ); */
         
-        /*
-         * if (cvg[i] <= errBound)
-         * break;
-         */
+        /* check if converged */
+        if (cvg[i] <= errBound)
+            break;
         
     }
     /* update iteration number */
@@ -405,7 +404,7 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int n
             for (l = 0; l < nLab; l++){
                 fpt = cc*(ft[l] - ps[g_idx]);
                 u[g_idx+l*Nx*Ny] -= fpt;
-                erru += abs(fpt);
+                erru += fabsf(fpt);
             
             }
             

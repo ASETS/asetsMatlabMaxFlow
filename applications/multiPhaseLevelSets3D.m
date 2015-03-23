@@ -90,9 +90,9 @@ for it=1:maxLevelSetIterations
     
     % call 3D max-flow optimizer with CUDA if possible
     if(gpuDeviceCount && useCUDAFLAG)
-        [u, erriter, i, timet] = asetsPotts3D(gpuArray(Ct), gpuArray(alpha), pars);
+        [u, erriter, itnum, timet] = asetsPotts3D(gpuArray(Ct), gpuArray(alpha), pars);
     else
-        [u, erriter, i, timet] = asetsPotts3D(Ct, alpha, pars);
+        [u, erriter, itnum, timet] = asetsPotts3D(Ct, alpha, pars);
     end
     
     % maj vote to discretize continuous labels
@@ -106,9 +106,9 @@ for it=1:maxLevelSetIterations
         vis_s = 40;
         close all;
         figure();
-        subplot(1,3,1); imshow(img(:,:,vis_s),[]);
-        subplot(1,3,2); imshow(initRegions(:,:,vis_s),[0 numberOfLabels]);
-        subplot(1,3,3); imshow(currRegions(:,:,vis_s),[0 numberOfLabels]);
+        subplot(1,3,1); imshow(img(:,:,vis_s),[]); title('image');
+        subplot(1,3,2); imshow(initRegions(:,:,vis_s),[0 numberOfLabels]); title('init (t=0)');
+        subplot(1,3,3); imshow(currRegions(:,:,vis_s),[0 numberOfLabels]); title(['u (t=',num2str(it),')']);
         colormap('jet');
         drawnow();
     end

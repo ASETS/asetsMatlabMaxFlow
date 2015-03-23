@@ -83,6 +83,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     cc = (float) pars[5];
     steps = (float) pars[6];
     
+    nLab = 1;
+    
     /* Outputs */
     /* outputs the computed u(x)  */
     dim[0] = Ny;
@@ -95,8 +97,8 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     
     /* outputs the convergence rate  */
     nDim = 2;
-    dim[0] = 1;
-    dim[1] = maxIt;
+    dim[0] = maxIt;
+    dim[1] = 1;
     pmxOut[1] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     cvg = mxGetData(pmxOut[1]);
     
@@ -176,15 +178,13 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
         /* update ps(x)/pt(x) and the multiplier/labeling functions u(x) */
         total_err = updateDIVPSPTU(dv, bx, by, bz, ps, pt, Cs, Ct, u, Nx, Ny, Nz, cc);
         
-        /* to be implemented */
         /* evaluate the convergence error */
-        /*cvg[i] = total_err / (float)(Nx*Ny*Nz); */
+        cvg[i] = total_err / (float)(Nx*Ny*Nz); 
         /*mexPrintf("it= %d, cvg = %f\n", i,cvg[i] ); */
         
-        /*
-         * if (cvg[i] <= errBound)
-         * break;
-         */
+        /* check if converged */
+        if (cvg[i] <= errBound)
+            break;
         
     }
     /* update iteration number */
@@ -428,7 +428,7 @@ float updateDIVPSPTU(float *dv, float *bx, float *by, float *bz, float *ps, floa
                 
                 /* update the multiplier u */
                 fpt = cc*(pt[g_idx] + dv[g_idx] - ps[g_idx]);
-                erru += abs(fpt);
+                erru += fabsf(fpt);
                 
                 u[g_idx] -= fpt;
                 

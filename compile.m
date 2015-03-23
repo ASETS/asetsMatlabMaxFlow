@@ -13,4 +13,5 @@ mex ([basePath, filesep, 'maxflow', filesep ,'asetsBinaryMF3D_mex.c']);
 mex ([basePath, filesep, 'maxflow', filesep ,'asetsPotts2D_mex.c']);
 mex ([basePath, filesep, 'maxflow', filesep ,'asetsPotts3D_mex.c']);
 mex ([basePath, filesep, 'maxflow', filesep ,'asetsIshikawa2D_mex.c']);
+mex ([basePath, filesep, 'maxflow', filesep ,'asetsIshikawa3D_mex.c']);
 cd(basePath);
