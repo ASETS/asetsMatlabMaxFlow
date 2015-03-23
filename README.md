@@ -1,7 +1,7 @@
 ## Advanced Segmentation Tools ([ASeTs](http://github.com/ASETS)) Matlab repository ([website](http://asets.github.io/asetsMatlabMaxFlow/))
 
 ### License:  
-TBD
+BSD (see license.md)
 
 ### Developers:
 - Martin Rajchl (@mrajchl), Imperial College London (UK)
