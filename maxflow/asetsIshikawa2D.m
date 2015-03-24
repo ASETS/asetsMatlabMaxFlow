@@ -27,19 +27,20 @@ vol = rows*cols*nlab-1;
 
 % alloc the max flow buffers
 pt = zeros(rows, cols, nlab, class(Ct));
-u = zeros(rows, cols, nlab-1, class(Ct));
+u = ones(rows, cols, nlab-1, class(Ct));
 pp1 = zeros(rows, cols+1, nlab-1, class(Ct));
 pp2 = zeros(rows+1, cols, nlab-1, class(Ct));
 erriter = zeros(iterNum,1, class(Ct));
 divp = zeros(rows,cols,nlab-1, class(Ct));
 
-% [um,init] = min(Ct,[],3);
-% for k=1:rows
-%     for j=1:cols
-%         pt(k,j,:) = Ct(k,j,init(k,j));
-%         u(k,j,init(k,j):nlab-1) = 0;
-%     end
-% end
+% initialize the flow buffers for faster convergence
+[um,init] = min(Ct,[],3);
+for k=1:rows
+    for j=1:cols
+        pt(k,j,:) = Ct(k,j,init(k,j));
+        u(k,j,init(k,j):nlab-1) = 0;
+    end
+end
 
 tic
 for i = 1:iterNum

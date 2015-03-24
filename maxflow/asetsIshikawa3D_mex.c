@@ -22,7 +22,7 @@ void runMaxFlow( float *alpha, float *Ct,
         float errbound, float cc, float steps,
         float *u, float *cvg, int *itNum);
 
-void init();
+void init(float *Ct, float *pt, float *u, int Nx, int Ny, int Nz, int nLab);
 
 void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id);
 void updatePX(float *gk, float *bx, int Nx, int Ny, int Nz, float steps, int lbl_id);
@@ -157,7 +157,7 @@ void runMaxFlow( float *alpha, float *Ct,
     if (!(bx || by || bz || dv || gk || pt))
         mexPrintf("malloc error.\n");
     
-    init();
+    init(Ct, pt, u, Nx, Ny, Nz, nLab);
     
     /* iterate */
     i = 0;
@@ -226,27 +226,46 @@ void runMaxFlow( float *alpha, float *Ct,
     
 }
 
-/* to be implemented */
-void init(){
+void init(float *Ct, float *pt, float *u, int Nx, int Ny, int Nz, int nLab){
     /* init */
-    /*
-     * for (x=0; x < Nx; x++){
-     * for (y=0; y < Ny; y++){
-     *
-     * idx = x + (y*Nx);
-     * graphSz = Nx*Ny;
-     *
-     * for (k = 0; k < nLab; k++){
-     * float tmp = 10-7;
-     * tmp = min(Ct[idx+k*graphSz], tmp);
-     * ps[idx] = tmp;
-     *
-     * pt[idx+k*graphSz] = ;
-     * }
-     *
-     * }
-     * }
-     */
+    int x, y, z;
+    
+    for (z=0; z < Nz; z++){
+        for (x=0; x < Nx; x++){
+            for (y=0; y < Ny; y++){
+                
+                int g_idx = z*Nx*Ny + x*Ny + y;
+                
+                float minVal = 1e30;
+                int minId = 1e9;
+                
+                /* find the minimum Ct(x,l) */
+                int l;
+                for (l = 0; l < nLab; l++){
+                    int l_idx = g_idx + l*Nx*Ny*Nz;
+                    
+                    if ( minVal > Ct[l_idx] ){
+                        minVal = Ct[l_idx];
+                        minId = l;
+                    }
+                }
+                
+                /* init pt, u */
+                for (l = 0; l < nLab-1; l++){
+                    int l_idx = g_idx + l*Nx*Ny*Nz;
+                    
+                    pt[l_idx] = minVal;
+                    
+                    if (l >= minId)
+                        u[l_idx] = 0.0f;
+                    else
+                        u[l_idx] = 1.0f;
+                }
+                
+            }
+        }
+        
+    }
 }
 
 void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id){

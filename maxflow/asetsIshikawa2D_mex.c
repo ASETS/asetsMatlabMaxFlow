@@ -22,7 +22,7 @@ void runMaxFlow( float *alpha, float *Ct,
         float errbound, float cc, float steps,
         float *u, float *cvg, int *itNum);
 
-void init();
+void init(float *Ct, float *pt, float *u, int Nx, int Ny, int nLab);
 
 void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, float cc, int lbl_id);
 void updatePX(float *gk, float *bx, int Nx, int Ny, float steps, int lbl_id);
@@ -151,7 +151,7 @@ void runMaxFlow( float *alpha, float *Ct,
     if (!(bx || by || dv || gk || pt))
         mexPrintf("malloc error.\n");
     
-    /* init(Cs, Ct, u, ps, Nx, Ny);*/
+    init(Ct, pt, u, Nx, Ny, nLab);
     
     /* iterate */
     i = 0;
@@ -217,22 +217,45 @@ void runMaxFlow( float *alpha, float *Ct,
     
 }
 
-/* to be implemented */
-void init();
-/*void init(float *Cs, float *Ct, float *u, float *ps, float *pt, int Nx, int Ny){
-    int x = 0;
-    int y = 0;
+void init(float *Ct, float *pt, float *u, int Nx, int Ny, int nLab){
+    /* init */
+    int x, y;
+    
     for (x=0; x < Nx; x++){
         for (y=0; y < Ny; y++){
             
             int g_idx = x*Ny + y;
-            int l_idx = g_idx + lbl_id*Nx*Ny;
             
+            float minVal = 1e30;
+            int minId = 1e9;
+            
+            /* find the minimum Ct(x,l) */
+            int l;
+            for (l = 0; l < nLab; l++){
+                int l_idx = g_idx + l*Nx*Ny;
+                
+                if ( minVal > Ct[l_idx] ){
+                    minVal = Ct[l_idx];
+                    minId = l;
+                }
+            }
+            
+            /* init pt, u */            
+            for (l = 0; l < nLab-1; l++){
+                int l_idx = g_idx + l*Nx*Ny;
+                
+                pt[l_idx] = minVal;
+                
+                if (l >= minId)
+                    u[l_idx] = 0.0f;
+                else
+                    u[l_idx] = 1.0f;
+            }
             
         }
+        
     }
 }
- */
 
 void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, float cc, int lbl_id){
     
