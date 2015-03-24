@@ -27,7 +27,7 @@ void runMaxFlow( float *alpha, float *Ct,
         float errbound, float cc, float steps,
         float *u, float *cvg, int *itNum);
 
-void init();
+void init(float *Ct, float *ps, float *pt, float *u, int Nx, int Ny, int nLab);
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, float cc, int lbl_id);
 void updatePX(float *gk, float *bx, int Nx, int Ny, float steps, int lbl_id);
@@ -128,7 +128,7 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     end_time = clock();
     
     runTime[0] = difftime(end_time, start_time)/1000000;
-
+    
     mexPrintf("potts model max flow 2D: number of iterations = %i; time = %.4f sec\n",itNum[0],runTime[0]);
     
 }
@@ -154,13 +154,13 @@ void runMaxFlow( float *alpha, float *Ct,
     if (!(bx || by || dv || gk || ps || pt))
         mexPrintf("malloc error.\n");
     
-    init();
+    init(Ct, ps, pt, u, Nx, Ny, nLab);
     
     
     /* iterate */
     i = 0;
     for (i = 0; i < maxIt; i++){
-                
+        
         int k = 0;
         for (k = 0; k < nLab; k++){
             
@@ -168,15 +168,15 @@ void runMaxFlow( float *alpha, float *Ct,
             updateP1(gk, dv, ps, pt, u, Nx, Ny, cc, k);
             updatePX(gk, bx, Nx, Ny, steps, k);
             updatePY(gk, by, Nx, Ny, steps, k);
-        
+            
             /* projection step to make |p(x,i)| <= alpha(x,lbl)*/
             projStep(bx, by, alpha, gk, Nx, Ny, k);
-        
+            
             
             /* update the component bx, by */
             updateBX(bx, gk, Nx, Ny, k);
             updateBY(by, gk, Nx, Ny, k);
-        
+            
             
             /* update the sink flow field pt(x,lbl) pd and div(x,lbl)  */
             updatePTDIV(dv, bx, by, ps, u, pt, Ct, Nx, Ny, cc, k);
@@ -184,7 +184,7 @@ void runMaxFlow( float *alpha, float *Ct,
         
         /* update ps(x) and the multiplier/labeling functions u(x,lbl) */
         total_err = updatePSU(dv, pt, u, ps, Nx, Ny, nLab, cc);
-                
+        
         /* to be implemented */
         /* evaluate the convergence error */
         cvg[i] = total_err / (float)(Nx*Ny*nLab);
@@ -208,28 +208,46 @@ void runMaxFlow( float *alpha, float *Ct,
     
 }
 
-/* to be implemented */
-void init(){
+void init(float *Ct, float *ps, float *pt, float *u, int Nx, int Ny, int nLab){
     /* init */
-    /*
+    int x, y;
+    
     for (x=0; x < Nx; x++){
         for (y=0; y < Ny; y++){
             
-            idx = x + (y*Nx);
-            graphSz = Nx*Ny;
+            int g_idx = x*Ny + y;
             
-            for (k = 0; k < nLab; k++){
-                float tmp = 10-7;
-                tmp = min(Ct[idx+k*graphSz], tmp);
-                ps[idx] = tmp;
+            float minVal = 1e30;
+            int minId = 1e9;
+            
+            /* find the minimum Ct(x,l) */
+            int l;
+            for (l = 0; l < nLab; l++){
+                int l_idx = g_idx + l*Nx*Ny;
                 
-                pt[idx+k*graphSz] = ;
+                if ( minVal > Ct[l_idx] ){
+                    minVal = Ct[l_idx];
+                    minId = l;
+                }
+            }
+            
+            /* init ps, pt, u */
+            ps[g_idx] = minVal;
+            
+            for (l = 0; l < nLab; l++){
+                int l_idx = g_idx + l*Nx*Ny;
+                
+                pt[l_idx] = ps[g_idx];
+                
+                if (l == minId)
+                    u[l_idx] = 1.0f;
             }
             
         }
+        
     }
-     */
 }
+
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, float cc, int lbl_id){
     
@@ -270,7 +288,7 @@ void updatePY(float *gk, float *by, int Nx, int Ny, float steps, int lbl_id){
     
     for(x = 0; x < Nx; x ++){
         for(y = 1; y < Ny; y++){
-
+            
             int g_idx = x*Ny + y;
             int l_idx = g_idx + lbl_id*Nx*Ny;
             
@@ -294,7 +312,7 @@ void projStep(float *bx, float *by, float *alpha, float *gk, int Nx, int Ny, int
             
             if( alpha[l_idx] <= 0 ){
                 mexErrMsgTxt("alpha(x,l) must be positive. Exiting...");
-            }     
+            }
             
             fpt = sqrt((pow(bx[l_idx+Ny],2) + pow(bx[l_idx],2) +
                     pow(by[l_idx+1],2) + pow(by[l_idx],2))*0.5);
@@ -333,7 +351,7 @@ void updateBY(float *by, float *gk, int Nx, int Ny, int lbl_id){
     
     for (x=0; x<Nx; x++){
         for (y=1; y< Ny; y++){
-
+            
             int g_idx = x*Ny + y;
             int l_idx = g_idx + lbl_id*Nx*Ny;
             
@@ -350,11 +368,11 @@ void updatePTDIV(float *dv, float *bx, float *by, float *ps, float *u, float *pt
     int y = 0;
     for (x=0; x< Nx; x++){
         for (y=0; y< Ny; y++){
-
+            
             int g_idx = x*Ny + y;
             int l_idx = g_idx + lbl_id*Nx*Ny;
             
-            /* update the divergence field dv(x,l)  */  
+            /* update the divergence field dv(x,l)  */
             dv[l_idx] = by[l_idx+1] - by[l_idx]
                     + bx[l_idx+Ny] - bx[l_idx];
             
@@ -367,7 +385,7 @@ void updatePTDIV(float *dv, float *bx, float *by, float *ps, float *u, float *pt
             
         }
     }
-
+    
 }
 
 
@@ -399,13 +417,13 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int n
             }
             
             ps[g_idx] = fpt/nLab + 1/(cc*nLab);
-                       
+            
             /* update the multipliers u(x,l) */
             for (l = 0; l < nLab; l++){
                 fpt = cc*(ft[l] - ps[g_idx]);
                 u[g_idx+l*Nx*Ny] -= fpt;
                 erru += fabsf(fpt);
-            
+                
             }
             
         }

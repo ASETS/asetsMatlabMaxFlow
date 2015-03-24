@@ -63,14 +63,14 @@ if (run2DPottsTestFLAG)
         
         figure();
         for i=1:(numberOfLabels)
-            subplot(2,numberOfLabels,i); imshow(Ct(:,:,i),[]);
-            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 max(u(:))]);
+            subplot(2,numberOfLabels,i); imshow(Ct(:,:,i),[]); title(['Ct_{',num2str(i),'}']);
+            subplot(2,numberOfLabels,i+numberOfLabels); imshow(u(:,:,i),[0 max(u(:))]); title(['u_{',num2str(i),'}']);
         end
         
         % view resulting labeling functions from each implementation
         figure();
-        subplot(1,2,1); imshow(I,[1 numberOfLabels]);
-        subplot(1,2,2); imshow(I2,[1 numberOfLabels]);
+        subplot(1,2,1); imshow(I,[1 numberOfLabels]); title('u_{C}');
+        subplot(1,2,2); imshow(I2,[1 numberOfLabels]); title('u_{Matlab}');
         
         implErr = 0;
         for i = 1:numberOfLabels
@@ -136,18 +136,18 @@ if (run3DPottsTestFLAG)
         
         figure();
         for i=1:(numberOfLabels)
-            subplot(4,numberOfLabels,i); imshow(Ct(:,:,vis_s,i),[]);
-            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u(vis_r,:,:,i)),[0 max(u(:))]);
+            subplot(4,numberOfLabels,i); imshow(Ct(:,:,vis_s,i),[]); title(['Ct_{',num2str(i),'}']);
+            subplot(4,numberOfLabels,i+numberOfLabels); imshow(squeeze(u(vis_r,:,:,i)),[0 max(u(:))]); title(['u_{',num2str(i),'}']);
             subplot(4,numberOfLabels,i+2*numberOfLabels); imshow(squeeze(u(:,vis_c,:,i)),[0 max(u(:))]);
             subplot(4,numberOfLabels,i+3*numberOfLabels); imshow(squeeze(u(:,:,vis_s,i)),[0 max(u(:)) ]);
         end
         
         % view resulting labeling functions from each implementation
         figure();
-        subplot(2,3,1); imshow(squeeze(I(vis_r,:,:)),[1 numberOfLabels]);
-        subplot(2,3,2); imshow(squeeze(I(:,vis_c,:)),[1 numberOfLabels]);
-        subplot(2,3,3); imshow(squeeze(I(:,:,vis_s)),[1 numberOfLabels]);
-        subplot(2,3,4); imshow(squeeze(I2(vis_r,:,:)),[1 numberOfLabels]);
+        subplot(2,3,1); imshow(squeeze(I(vis_r,:,:)),[1 numberOfLabels]); title('u_{C}');
+        subplot(2,3,2); imshow(squeeze(I(:,vis_c,:)),[1 numberOfLabels]); 
+        subplot(2,3,3); imshow(squeeze(I(:,:,vis_s)),[1 numberOfLabels]); 
+        subplot(2,3,4); imshow(squeeze(I2(vis_r,:,:)),[1 numberOfLabels]); title('u_{Matlab}');
         subplot(2,3,5); imshow(squeeze(I2(:,vis_c,:)),[1 numberOfLabels]);
         subplot(2,3,6); imshow(squeeze(I2(:,:,vis_s)),[1 numberOfLabels]);
         

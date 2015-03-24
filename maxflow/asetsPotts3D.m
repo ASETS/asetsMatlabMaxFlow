@@ -47,14 +47,18 @@ u = zeros(rows,cols,slices,nlab, class(Ct));
 pt = zeros(rows,cols,slices,nlab, class(Ct));
 ps = zeros(rows,cols,slices, class(Ct));
 
-% [ps,I] = min(Ct, [], 4);
-% 
-% for k=1:rows
-%     for j=1:cols
-%         pt(k,j,:) = ps(k,j);
-%         u(k,j,I(k,j)) = 1;
-%     end
-% end
+
+% initialize the flow buffers for faster convergence
+[ps,I] = min(Ct, [], 4);
+
+for k=1:rows
+    for j=1:cols
+        for l=1:slices
+        pt(k,j,l,:) = ps(k,j,l);
+        u(k,j,l,I(k,j,l)) = 1;
+        end
+    end
+end
 
 divp = zeros(rows,cols,slices,nlab, class(Ct));
 

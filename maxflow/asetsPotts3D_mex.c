@@ -24,7 +24,7 @@ void runMaxFlow( float *alpha, float *Ct,
         float errbound, float cc, float steps,
         float *u, float *cvg, int *itNum);
 
-void init();
+void init(float *Ct, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, int nLab);
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id);
 void updatePX(float *gk, float *bx, int Nx, int Ny, int Nz, float steps, int lbl_id);
@@ -93,7 +93,7 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     dim[2] = Nz;
     dim[3] = nLab;
     nDim = 4;
-        
+    
     pmxOut[0] = mxCreateNumericArray(nDim,(const int*)dim,mxSINGLE_CLASS,mxREAL);
     u = mxGetData(pmxOut[0]);
     
@@ -158,8 +158,8 @@ void runMaxFlow( float *alpha, float *Ct,
     if (!(bx || by || bz || dv || gk || ps || pt))
         mexPrintf("malloc error.\n");
     
-    init();
     
+    init(Ct, ps, pt, u, Nx, Ny, Nz, nLab);
     
     /* iterate */
     i = 0;
@@ -176,7 +176,7 @@ void runMaxFlow( float *alpha, float *Ct,
             
             /* projection step to make |p(x,i)| <= alpha(x,lbl)*/
             projStep(bx, by, bz, alpha, gk, Nx, Ny, Nz, k);
-                        
+            
             /* update the component bx, by */
             updateBX(bx, gk, Nx, Ny, Nz, k);
             updateBY(by, gk, Nx, Ny, Nz, k);
@@ -212,27 +212,45 @@ void runMaxFlow( float *alpha, float *Ct,
     
 }
 
-/* to be implemented */
-void init(){
+void init(float *Ct, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, int nLab){
     /* init */
-    /*
-     * for (x=0; x < Nx; x++){
-     * for (y=0; y < Ny; y++){
-     *
-     * idx = x + (y*Nx);
-     * graphSz = Nx*Ny;
-     *
-     * for (k = 0; k < nLab; k++){
-     * float tmp = 10-7;
-     * tmp = min(Ct[idx+k*graphSz], tmp);
-     * ps[idx] = tmp;
-     *
-     * pt[idx+k*graphSz] = ;
-     * }
-     *
-     * }
-     * }
-     */
+    int x, y, z;
+    
+    for (z=0; z < Nz; z++){
+        for (x=0; x < Nx; x++){
+            for (y=0; y < Ny; y++){
+                
+                int g_idx = z*Nx*Ny + x*Ny + y;
+                
+                float minVal = 1e30;
+                int minId = 1e9;
+                
+                /* find the minimum Ct(x,l) */
+                int l;
+                for (l = 0; l < nLab; l++){
+                    int l_idx = g_idx + l*Nx*Ny*Nz;
+                    
+                    if ( minVal > Ct[l_idx] ){
+                        minVal = Ct[l_idx];
+                        minId = l;
+                    }
+                }
+                
+                /* init ps, pt, u */
+                ps[g_idx] = minVal;
+                
+                for (l = 0; l < nLab; l++){
+                    int l_idx = g_idx + l*Nx*Ny*Nz;
+                    
+                    pt[l_idx] = ps[g_idx];
+                    
+                    if (l == minId)
+                        u[l_idx] = 1.0f;
+                }
+                
+            }
+        }
+    }
 }
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, float cc, int lbl_id){
@@ -244,13 +262,13 @@ void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int 
     for (z=0; z < Nz; z++){
         for (x=0; x < Nx; x++){
             for (y=0; y < Ny; y++){
-                    
+                
                 int g_idx = z*Nx*Ny + x*Ny + y;
                 int l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
                 gk[g_idx] = dv[l_idx] - (ps[g_idx]
                         - pt[l_idx] + u[l_idx]/cc);
-               
+                
             }
         }
     }
@@ -295,7 +313,7 @@ void updatePY(float *gk, float *by, int Nx, int Ny, int Nz, float steps, int lbl
             }
         }
     }
-     }
+}
 
 void updatePZ(float *gk, float *bz, int Nx, int Ny, int Nz, float steps, int lbl_id){
     
