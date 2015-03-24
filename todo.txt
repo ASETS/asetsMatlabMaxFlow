@@ -15,10 +15,10 @@ Optimization methods:
 [x] - HMF optimizer 
 [x] - Pseudo-Flow optimizer
 [ ] - Co-segmentation continuous max flow solver 
-[ ] - Ishikawa model solver
+[x] - Ishikawa model solver
 [x] - CUDA optimizer for Potts
 [x] - CUDA optimizer for Binary MF
-[ ] - CUDA optimizer for Ishikawa
+[x] - CUDA optimizer for Ishikawa
 [ ] - CUDA optimizer for HMF
 
 Tests: 
@@ -28,7 +28,7 @@ Tests:
 [ ] - Ishikawa vs. Potts vs. HMF
 
 Features: 
-[ ] - Intialization for all optimizers
+[x] - Intialization for all optimizers
 
 
 
