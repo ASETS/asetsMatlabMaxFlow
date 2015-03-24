@@ -22,7 +22,7 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
         float errbound, float cc, float steps,
         float *u, float *cvg, int *itNum);
 
-void init();
+void init(float *Cs, float *Ct, float *ps, float *pt, float *u, int Nx, int Ny, int Nz);
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, float cc);
 void updatePX(float *gk, float *bx, int Nx, int Ny, int Nz, float steps);
@@ -154,7 +154,7 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
     if (!(bx || by || bz || dv || gk || ps || pt))
         mexPrintf("malloc error.\n");
     
-    init();
+    init(Cs, Ct, ps, pt, u, Nx, Ny, Nz);
     
     
     /* iterate */
@@ -201,27 +201,25 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
     
 }
 
-/* to be implemented */
-void init(){
+void init(float *Cs, float *Ct, float *ps, float *pt, float *u, int Nx, int Ny, int Nz){
     /* init */
-    /*
-     * for (x=0; x < Nx; x++){
-     * for (y=0; y < Ny; y++){
-     *
-     * idx = x + (y*Nx);
-     * graphSz = Nx*Ny;
-     *
-     * for (k = 0; k < nLab; k++){
-     * float tmp = 10-7;
-     * tmp = min(Ct[idx+k*graphSz], tmp);
-     * ps[idx] = tmp;
-     *
-     * pt[idx+k*graphSz] = ;
-     * }
-     *
-     * }
-     * }
-     */
+    int x, y, z;
+    
+    for (x=0; x < Nx; x++){
+        for (y=0; y < Ny; y++){
+            for (z=0; z < Nz; z++){
+                
+                int g_idx = z*Nx*Ny + x*Ny + y;
+                
+                if(Cs[g_idx] - Ct[g_idx] >= 0){
+                    u[g_idx] = 1.0f;
+                }
+                ps[g_idx] = MIN(Cs[g_idx], Ct[g_idx]);
+                pt[g_idx] = ps[g_idx];
+                
+            }
+        }
+    }
 }
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, int Nz, float cc){

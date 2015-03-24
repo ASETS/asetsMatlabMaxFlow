@@ -25,8 +25,6 @@ steps = pars(7);
 
 imgSize = rows*cols*slices;
 
-%u = double((Cs-Ct) >= 0);
-%ps = min(Cs, Ct);
 u = zeros(rows,cols,slices,class(Ct));
 ps = zeros(rows,cols,slices,class(Ct));
 pt = zeros(rows,cols,slices,class(Ct));
@@ -37,6 +35,11 @@ pp3 = zeros(rows, cols, slices+1, class(Ct));
 divp = zeros(rows,cols,slices, class(Ct));
 
 erriter = zeros(iterNum,1, class(Ct));
+
+% initialize the flow buffers for faster convergence
+u = double((Cs-Ct) >= 0);
+ps = min(Cs, Ct);
+pt = ps;
 
 tic
 for i = 1:iterNum

@@ -151,7 +151,7 @@ void runMaxFlow( float *alpha, float *Ct,
     if (!(bx || by || dv || gk || pt))
         mexPrintf("malloc error.\n");
     
-    init();
+    /* init(Cs, Ct, u, ps, Nx, Ny);*/
     
     /* iterate */
     i = 0;
@@ -218,27 +218,21 @@ void runMaxFlow( float *alpha, float *Ct,
 }
 
 /* to be implemented */
-void init(){
-    /* init */
-    /*
+void init();
+/*void init(float *Cs, float *Ct, float *u, float *ps, float *pt, int Nx, int Ny){
+    int x = 0;
+    int y = 0;
     for (x=0; x < Nx; x++){
         for (y=0; y < Ny; y++){
             
-            idx = x + (y*Nx);
-            graphSz = Nx*Ny;
+            int g_idx = x*Ny + y;
+            int l_idx = g_idx + lbl_id*Nx*Ny;
             
-            for (k = 0; k < nLab; k++){
-                float tmp = 10-7;
-                tmp = min(Ct[idx+k*graphSz], tmp);
-                ps[idx] = tmp;
-                
-                pt[idx+k*graphSz] = ;
-            }
             
         }
     }
-     */
 }
+ */
 
 void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, float cc, int lbl_id){
     

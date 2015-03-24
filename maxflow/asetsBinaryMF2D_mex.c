@@ -22,7 +22,7 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
         float errbound, float cc, float steps,
         float *u, float *cvg, int *itNum);
 
-void init();
+void init(float *Cs, float *Ct, float *ps, float *pt, float *u, int Nx, int Ny);
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, float cc);
 void updatePX(float *gk, float *bx, int Nx, int Ny, float steps);
@@ -122,7 +122,7 @@ extern void mexFunction(int iNbOut, mxArray *pmxOut[],
     end_time = clock();
     
     runTime[0] = difftime(end_time, start_time)/1000000;
-
+    
     mexPrintf("binary max flow 2D: number of iterations = %i; time = %.4f sec\n",itNum[0],runTime[0]);
     
 }
@@ -148,7 +148,7 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
     if (!(bx || by || dv || gk || ps || pt))
         mexPrintf("malloc error.\n");
     
-    init();
+    init(Cs, Ct, ps, pt, u, Nx, Ny);
     
     /* iterate */
     i = 0;
@@ -165,19 +165,19 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
         /* update the component bx, by */
         updateBX(bx, gk, Nx, Ny);
         updateBY(by, gk, Nx, Ny);
-
+        
         /* update ps(x)/pt(x) and the multiplier/labeling functions u(x) */
         total_err = updateDIVPSPTU(dv, bx, by, ps, pt, Cs, Ct, u, Nx, Ny, cc);
-
+        
         
         /* evaluate the convergence error */
-        cvg[i] = total_err / (float)(Nx*Ny); 
+        cvg[i] = total_err / (float)(Nx*Ny);
         /* mexPrintf("it= %d, cvg = %f\n", i, cvg[i]); */
         
         /* check if converged */
         if (cvg[i] <= errBound)
             break;
-                
+        
     }
     /* update iteration number */
     itNum[0] = i;
@@ -192,27 +192,24 @@ void runMaxFlow( float *alpha, float *Cs, float *Ct,
     
 }
 
-/* to be implemented */
-void init(){
+void init(float *Cs, float *Ct, float *ps, float *pt, float *u, int Nx, int Ny){
     /* init */
-    /*
-     * for (x=0; x < Nx; x++){
-     * for (y=0; y < Ny; y++){
-     *
-     * idx = x + (y*Nx);
-     * graphSz = Nx*Ny;
-     *
-     * for (k = 0; k < nLab; k++){
-     * float tmp = 10-7;
-     * tmp = min(Ct[idx+k*graphSz], tmp);
-     * ps[idx] = tmp;
-     *
-     * pt[idx+k*graphSz] = ;
-     * }
-     *
-     * }
-     * }
-     */
+    int x, y;
+    
+    for (x=0; x < Nx; x++){
+        for (y=0; y < Ny; y++){
+            
+            int g_idx = x*Ny + y;
+            
+            if(Cs[g_idx] - Ct[g_idx] >= 0){
+                u[g_idx] = 1.0f;
+            }
+            ps[g_idx] = MIN(Cs[g_idx], Ct[g_idx]);
+            pt[g_idx] = ps[g_idx];
+            
+        }
+        
+    }
 }
 
 void updateP1(float *gk, float *dv, float *ps, float *pt, float *u, int Nx, int Ny, float cc){
@@ -275,7 +272,7 @@ void projStep(float *bx, float *by, float *alpha, float *gk, int Nx, int Ny){
             if( alpha[g_idx] <= 0 ){
                 mexErrMsgTxt("alpha(x) must be positive. Exiting...");
             }
-
+            
             fpt = sqrt((pow(bx[g_idx+Ny],2) + pow(bx[g_idx],2) +
                     pow(by[g_idx+1],2) + pow(by[g_idx],2))*0.5);
             
