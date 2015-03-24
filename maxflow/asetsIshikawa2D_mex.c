@@ -201,7 +201,7 @@ void runMaxFlow( float *alpha, float *Ct,
         /*mexPrintf("it= %d, cvg = %f\n", i,cvg[i] ); */
         
         /* check if converged */
-        if (cvg[i] <= errBound)
+        if (cvg[i] < errBound)
             break;
         
     }
@@ -394,7 +394,7 @@ void updateBottomLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, i
             int l_idx = g_idx + lbl_id*Nx*Ny;
             
             /* update pt(x,l)  */
-            fpt = dv[l_idx] + pt[l_idx+(Nx*Ny)] - u[l_idx] + 1/cc;
+            fpt = dv[l_idx] + pt[l_idx+(Nx*Ny)] - u[l_idx]/cc + 1/cc;
             pt[l_idx] = MIN(fpt, Ct[l_idx]);
             
             

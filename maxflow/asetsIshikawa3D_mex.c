@@ -501,7 +501,7 @@ void updateBottomLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, i
                 l_idx = g_idx + lbl_id*Nx*Ny*Nz;
                 
                 /* update pt(x,l)  */
-                fpt = dv[l_idx] + pt[l_idx+graphSize] - u[l_idx] + 1/cc;
+                fpt = dv[l_idx] + pt[l_idx+graphSize] - u[l_idx]/cc + 1/cc;
                 pt[l_idx] = MIN(fpt, Ct[l_idx]);
                 
                 

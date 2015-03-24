@@ -21,9 +21,9 @@ r = 64; % number of rows
 c = 64; % number of columns
 s = 10; % number of slices
 
-maxIter = 1000; % maximum number of max flow iterations
-convErrBound2D = 1e-5; % bound at which the max flow is considered converged 
-convErrBound3D = 1e-5; % bound at which the max flow is considered converged 
+maxIter = 500; % maximum number of max flow iterations
+convErrBound2D = 1e-11; % bound at which the max flow is considered converged 
+convErrBound3D = 1e-11; % bound at which the max flow is considered converged 
 
 if (run2DIshikawaTestFLAG)
     
@@ -41,7 +41,7 @@ if (run2DIshikawaTestFLAG)
     
     % for each label assign a constant regularization weight
     for i=1:(numberOfLabels-1)
-        alpha(:,:,i) = (0.6/i).*ones(r,c);
+        alpha(:,:,i) = (0.8/i).*ones(r,c);
     end
     
     % call max-flow optimizer
@@ -117,7 +117,7 @@ if (run3DIshikawaTestFLAG)
     
     % for each label assign a constant regularization weight
     for i=1:numberOfLabels
-        alpha(:,:,:,i) = (0.2/i).*ones(r,c,s);
+        alpha(:,:,:,i) = (0.3/i).*ones(r,c,s);
     end
     
     
@@ -179,7 +179,6 @@ if (run3DIshikawaTestFLAG)
         subplot(1,2,2); loglog(erriter2); xlim([1 maxIter]); ylim([min([erriter; erriter2]), max([erriter; erriter2])]); title('convergence Matlab/CUDA');
         
     end
-    keyboard;
 end
 
 

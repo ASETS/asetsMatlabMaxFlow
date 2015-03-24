@@ -72,10 +72,10 @@ for i = 1:iterNum
             pt(:,:,1) = min(ud, Ct(:,:,1));
         end
         
-        if (k >= 2) & (k < nlab)
+        if (k >= 2) && (k < nlab)
             ud = - divp(:,:,k-1) + pt(:,:,k-1) + u(:,:,k-1)/cc;
             ud = ud + divp(:,:,k) + pt(:,:,k+1) - u(:,:,k)/cc;
-            ud = ud/2;
+            ud = ud/2.0;
             
             pt(:,:,k) = min(ud,Ct(:,:,k));
         end
