@@ -16,6 +16,7 @@
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define ABS(x) ( (x) > 0.0 ? x : -(x) )
 
 void runMaxFlow( float *alpha, float *Ct,
         int Nx, int Ny, int Nz, int nLab, int maxIt,
@@ -286,9 +287,6 @@ void updateP1(float *gk, float *dv, float *pt, float *u, int Nx, int Ny, int Nz,
                 gk[g_idx] = dv[l_idx] - (pt[l_idx]
                         - pt[l_idx+graphSize] + u[l_idx]/cc);
                 
-                if(!finite(gk[g_idx]))
-                    mexErrMsgTxt("Caught gk !finite. Exiting...");
-                
             }
         }
     }
@@ -392,8 +390,6 @@ void projStep(float *bx, float *by, float *bz, float *alpha, float *gk, int Nx, 
                 
                 gk[g_idx] = 1/fpt;
                 
-                if(!finite(gk[g_idx]))
-                    mexErrMsgTxt("Caught gk !finite. Exiting...");
             }
         }
     }
@@ -493,9 +489,6 @@ void updateDIV(float *dv, float *bx, float *by, float *bz, int Nx, int Ny, int N
                         + bx[l_idx+Ny] - bx[l_idx]
                         + bz[l_idx+(Nx*Ny)] - bz[l_idx];
                 
-                if(!finite(dv[l_idx])){
-                    mexErrMsgTxt("Caught div !finite. Exiting...");
-                }
             }
         }
     }
@@ -522,10 +515,6 @@ void updateBottomLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, i
                 /* update pt(x,l)  */
                 fpt = dv[l_idx] + pt[l_idx+graphSize] - u[l_idx]/cc + 1/cc;
                 pt[l_idx] = MIN(fpt, Ct[l_idx]);
-                
-                
-                if(!finite(fpt))
-                    mexErrMsgTxt("Caught pt bl !finite. Exiting...");
                 
             }
         }
@@ -555,10 +544,6 @@ void updateMidLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int 
                 fpt /= 2.0f;
                 
                 pt[l_idx] = MIN(fpt, Ct[l_idx]);
-                
-                if(!finite(fpt))
-                    mexErrMsgTxt("Caught pt ml !finite. Exiting...");
-                
             }
         }
     }
@@ -585,13 +570,10 @@ void updateTopLayerPT(float *gk, float *dv, float *pt, float *u, float *Ct, int 
                 fpt = - dv[l_idx-graphSize] + pt[l_idx-graphSize] + u[l_idx-graphSize]/cc;
                 pt[l_idx] = MIN(fpt, Ct[l_idx]);
                 
-                if(!finite(fpt))
-                    mexErrMsgTxt("Caught pt tl !finite. Exiting...");
             }
         }
     }
 }
-
 
 float updateU(float *dv, float *pt, float *u, int Nx, int Ny, int Nz, int nLab, float cc){
     
@@ -618,24 +600,7 @@ float updateU(float *dv, float *pt, float *u, int Nx, int Ny, int Nz, int nLab, 
                     fpt = cc*(dv[g_idx+l*graphSize] + pt[g_idx+((l+1)*graphSize)] - pt[g_idx+l*graphSize]);
                     
                     u[g_idx+l*graphSize] -= fpt;
-                    erru += fabsf(fpt);
-                    
-                    if(!finite(pt[g_idx+((l+1)*graphSize)]))
-                        mexErrMsgTxt("Caught pt+1 !finite. Exiting...");
-                    
-                    if(!finite(pt[g_idx+(l*graphSize)]))
-                        mexErrMsgTxt("Caught pt !finite. Exiting...");
-                    
-                    if(!finite(dv[g_idx+l*graphSize]))
-                        mexErrMsgTxt("Caught dv !finite. Exiting...");
-                    
-                    if(!finite(cc))
-                        mexErrMsgTxt("Caught cc !finite. Exiting...");
-                    
-                    if(!finite(fpt)){
-                        mexPrintf("%.2f, %.2f, %.2f, %.2f, %.2f", pt[g_idx+((l+1)*graphSize)], pt[g_idx+(l*graphSize)], dv[g_idx+l*graphSize], cc, fpt);
-                        mexErrMsgTxt("Caught fpt !finite. Exiting...");
-                    }
+                    erru += ABS(fpt);
                     
                 }
             }

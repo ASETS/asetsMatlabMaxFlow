@@ -16,6 +16,7 @@
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define ABS(x) ( (x) > 0.0 ? x : -(x) )
 
 void runMaxFlow( float *alpha, float *Cs, float *Ct,
         int Nx, int Ny, int Nz, int nLab, int maxIt,
@@ -426,7 +427,7 @@ float updateDIVPSPTU(float *dv, float *bx, float *by, float *bz, float *ps, floa
                 
                 /* update the multiplier u */
                 fpt = cc*(pt[g_idx] + dv[g_idx] - ps[g_idx]);
-                erru += fabsf(fpt);
+                erru += ABS(fpt);
                 
                 u[g_idx] -= fpt;
                 

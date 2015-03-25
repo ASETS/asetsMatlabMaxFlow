@@ -19,6 +19,10 @@
 #include <math.h>
 #include <time.h>
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define ABS(x) ( (x) > 0.0 ? x : -(x) )
+
 void runMaxFlow( float *alpha, float *Ct,
         int Nx, int Ny, int Nz, int nLab, int maxIt,
         float errbound, float cc, float steps,
@@ -505,7 +509,7 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int N
                     
                     fpt = cc*(ft[l] - ps[g_idx]);
                     u[l_idx] -= fpt;
-                    erru += fabsf(fpt);
+                    erru += ABS(fpt);
                     
                 }
                 

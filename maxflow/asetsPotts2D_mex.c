@@ -21,6 +21,7 @@
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define ABS(x) ( (x) > 0.0 ? x : -(x) )
 
 void runMaxFlow( float *alpha, float *Ct,
         int Nx, int Ny, int nLab, int maxIt,
@@ -422,7 +423,7 @@ float updatePSU(float *dv, float *pt, float *u, float *ps, int Nx, int Ny, int n
             for (l = 0; l < nLab; l++){
                 fpt = cc*(ft[l] - ps[g_idx]);
                 u[g_idx+l*Nx*Ny] -= fpt;
-                erru += fabsf(fpt);
+                erru += ABS(fpt);
                 
             }
             
