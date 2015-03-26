@@ -27,23 +27,24 @@ steps = pars(8);
 vol = rows*cols*slices*nlab-1;
 
 % alloc the max flow buffers
-pt = zeros(rows, cols, slices, nlab, class(Ct));
-u = ones(rows, cols, slices, nlab-1, class(Ct));
-pp1 = zeros(rows, cols+1, slices, nlab-1, class(Ct));
-pp2 = zeros(rows+1, cols, slices, nlab-1, class(Ct));
-pp3 = zeros(rows, cols, slices+1, nlab-1, class(Ct));
-erriter = zeros(iterNum,1, class(Ct));
-divp = zeros(rows,cols, slices, nlab-1, class(Ct));
+pt = zeros(rows, cols, slices, nlab, 'like', Ct);
+u = ones(rows, cols, slices, nlab-1, 'like', Ct);
+pp1 = zeros(rows, cols+1, slices, nlab-1, 'like', Ct);
+pp2 = zeros(rows+1, cols, slices, nlab-1, 'like', Ct);
+pp3 = zeros(rows, cols, slices+1, nlab-1, 'like', Ct);
+erriter = zeros(iterNum,1, 'like', Ct);
+divp = zeros(rows,cols, slices, nlab-1, 'like', Ct);
 
 % initialize the flow buffers for faster convergence
 [um,init] = min(Ct,[],4);
-for k=1:rows
-    for j=1:cols
-        for l=1:slices
-            pt(k,j,l) = Ct(k,j,l,init(k,j,l));
-            u(k,j,l,init(k,j,l):nlab-1) = 0;
-        end
-    end
+
+for k=1:nlab
+    pt(:,:,:,k) = um;
+end
+
+for k=1:nlab-1 
+    tmp = init > k;
+    u(:,:,:,k) = tmp;
 end
 
 tic

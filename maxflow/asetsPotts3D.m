@@ -43,35 +43,32 @@ vol = rows*cols*slices*nlab;
 %   - the spatial flow fiels p(x,i=1...nlab) = (pp1(x,i), pp2(x,i)),
 %     set to be zero.
 
-u = zeros(rows,cols,slices,nlab, class(Ct));
-pt = zeros(rows,cols,slices,nlab, class(Ct));
-ps = zeros(rows,cols,slices, class(Ct));
+u = zeros(rows,cols,slices,nlab, 'like', Ct);
+pt = zeros(rows,cols,slices,nlab, 'like', Ct);
+ps = zeros(rows,cols,slices, 'like', Ct);
 
 
 % initialize the flow buffers for faster convergence
 [ps,I] = min(Ct, [], 4);
 
-for k=1:rows
-    for j=1:cols
-        for l=1:slices
-        pt(k,j,l,:) = ps(k,j,l);
-        u(k,j,l,I(k,j,l)) = 1;
-        end
-    end
+for i=1:nlab
+    pt(:,:,:,i) = ps;
+    tmp = I == i;
+    u(:,:,:,i) = tmp;
 end
 
-divp = zeros(rows,cols,slices,nlab, class(Ct));
+divp = zeros(rows,cols,slices,nlab, 'like', Ct);
 
-pp1 = zeros(rows, cols+1, slices,nlab, class(Ct));
-pp2 = zeros(rows+1, cols, slices,nlab, class(Ct));
-pp3 = zeros(rows, cols, slices+1,nlab, class(Ct));
+pp1 = zeros(rows, cols+1, slices,nlab, 'like', Ct);
+pp2 = zeros(rows+1, cols, slices,nlab, 'like', Ct);
+pp3 = zeros(rows, cols, slices+1,nlab, 'like', Ct);
 
-erriter = zeros(iterNum,1, class(Ct));
+erriter = zeros(iterNum,1, 'like', Ct);
 
 tic
 for i = 1:iterNum
     
-    pd = zeros(rows,cols,slices, class(Ct));
+    pd = zeros(rows,cols,slices, 'like', Ct);
     
     % update the flow fields within each layer i=1...nlab
     

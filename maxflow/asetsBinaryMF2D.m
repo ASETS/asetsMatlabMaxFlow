@@ -29,15 +29,15 @@ steps = pars(6);
 imgSize = rows*cols;
 
 % allocate buffers
-u = zeros(rows,cols,class(Ct));
-ps = zeros(rows,cols,class(Ct));
-pt = zeros(rows,cols,class(Ct));
+u = zeros(rows,cols,'like', Ct);
+ps = zeros(rows,cols,'like', Ct);
+pt = zeros(rows,cols,'like', Ct);
 
-pp1 = zeros(rows, cols+1, class(Ct));
-pp2 = zeros(rows+1, cols, class(Ct));
-divp = zeros(rows,cols, class(Ct));
+pp1 = zeros(rows, cols+1, 'like', Ct);
+pp2 = zeros(rows+1, cols, 'like', Ct);
+divp = zeros(rows,cols, 'like', Ct);
 
-erriter = zeros(iterNum,1, class(Ct));
+erriter = zeros(iterNum,1, 'like', Ct);
 
 % initialize the flow buffers for faster convergence
 u = double((Cs-Ct) >= 0);
