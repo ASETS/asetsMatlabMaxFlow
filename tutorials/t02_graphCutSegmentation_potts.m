@@ -3,8 +3,13 @@
   
 clear all; close all;
 
+% include max-flow solver
+addpath(['..', filesep, 'maxflow']);
+addpath(['..', filesep, 'lib']);
+
 % 1. Load a color image and cast to single:
-img = imread('../data/berkeley_color_124084.jpg');
+load('../data/natural_imgs.mat','berkeley_color_124084');
+img = berkeley_color_124084;
 imgs = single(img);
 
 % 2. Create N = 4 cost functions to model each of the regions:

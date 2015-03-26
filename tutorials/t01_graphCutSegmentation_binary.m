@@ -3,8 +3,13 @@
   
 clear all; close all;
 
+% include max-flow solver
+addpath(['..', filesep, 'maxflow']);
+addpath(['..', filesep, 'lib']);
+
 % 1. Load an 8-bit greyscale image:
-img = imread('../data/cameraman.tif');
+load('../data/natural_imgs.mat','cameraman');
+img = cameraman;
 
 % 2. Normalize the image intensity to [0,1]:
 img = single(img);
