@@ -27,8 +27,13 @@ Tests:
 [ ] - Full flow vs pseudo-flow
 [ ] - Ishikawa vs. Potts vs. HMF
 
-Features: 
-[x] - Intialization for all optimizers
+Tutorials:
+[ ] - Binary image segmentation
+[ ] - Comparison of multi-region solvers
+[ ] - Image restoration
+[ ] - Levelset propagation
+
+
 
 
 
