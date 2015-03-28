@@ -17,15 +17,15 @@ BSD (see license.md)
    - Matlab/mex/C
    - Matlab/CUDA
 - Tutorials
-   - T01 Binary Graph Cut
+   - T01 Binary graph cuts
    - T02 Multi-region color image segmentation with the Potts model
    - T03 Using different max flow implementations (Matlab, C, CUDA) 
 - Application examples for (medical) image segmentation:
-    - Interactive max flow graph cuts
-    - Regularization of probabilistic label maps as in atlas-based segmentation
-    - High-performance multi-phase levelsets 
-    - Post-processing of flawed manual segmentations with constrast sensitive regularization
-    - L1 intensity segmentation  
+    - Interactive max flow graph cuts (3D)
+    - Regularization of probabilistic label maps as in atlas-based segmentation (3D)
+    - High-performance multi-phase levelsets (3D)
+    - Post-processing of flawed manual segmentations with constrast sensitive regularization (2D)
+    - L1 intensity segmentation (2D)
 
 ### Overview of file structure:   
 *./*: Compile scripts, readme, license and todo list  
