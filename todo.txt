@@ -28,7 +28,9 @@ Tests:
 [ ] - Ishikawa vs. Potts vs. HMF
 
 Tutorials:
-[ ] - Binary image segmentation
+[x] - Binary image segmentation
+[x] - Color image segmentation
+[x] - Using CUDA solvers
 [ ] - Comparison of multi-region solvers
 [ ] - Image restoration
 [ ] - Levelset propagation
