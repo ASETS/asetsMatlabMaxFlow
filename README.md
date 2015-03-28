@@ -16,6 +16,10 @@ BSD (see license.md)
 - Implemented in multiple languages
    - Matlab/mex/C
    - Matlab/CUDA
+- Tutorials
+   - T01 Binary Graph Cut
+   - T02 Multi-region color image segmentation with the Potts model
+   - T03 Using different max flow implementations (Matlab, C, CUDA) 
 - Application examples for (medical) image segmentation:
     - Interactive max flow graph cuts
     - Regularization of probabilistic label maps as in atlas-based segmentation
@@ -29,7 +33,8 @@ BSD (see license.md)
 *./data*: Example data to run the applications  
 *./lib*: Is created by compile.m and contains the compiled C/mex files  
 *./maxflow*: Optimization code in C/mex and Matlab  
-*./tests*: test scripts to compare different implementations against each other  
+*./tests*: Test scripts to compare different implementations against each other
+*./tutorials*: Contains available tutorials   
 
 ### Compile/Installation instructions:  
 To compile the C/mex code run:
@@ -40,5 +45,6 @@ which creates the folder *./lib*. For testing purposes run any script in *./test
 
 ### Tests:  
 - Matlab 2014a, 64-bit Linux (Ubuntu 12.04 LTS)  
-- Matlab 2014a, 64-bit Windows 7  
+- Matlab 2015a, 64-bit Windows 7
+- Matlab 2012a, 32-bit WinXP
 
