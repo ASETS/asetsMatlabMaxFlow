@@ -27,7 +27,7 @@ BSD (see license.md)
     - Post-processing of flawed manual segmentations with constrast sensitive regularization (2D)
     - L1 intensity segmentation (2D)
 
-### Overview of file structure:   
+### Overview of folder structure:   
 *./*: Compile scripts, readme, license and todo list  
 *./applications*: Contains examples of typical applications in image segmentation and analysis  
 *./data*: Example data to run the applications  
