@@ -33,7 +33,7 @@ BSD (see license.md)
 *./data*: Example data to run the applications  
 *./lib*: Is created by compile.m and contains the compiled C/mex files  
 *./maxflow*: Optimization code in C/mex and Matlab  
-*./tests*: Test scripts to compare different implementations against each other
+*./tests*: Test scripts to compare different implementations against each other  
 *./tutorials*: Contains available tutorials   
 
 ### Compile/Installation instructions:  
