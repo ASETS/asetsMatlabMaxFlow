@@ -1,5 +1,15 @@
 %% Tutorial 02: Multi-region graph cut color segmentation with the Potts model
 %  Martin Rajchl, Imperial College London, 2015
+%
+%   [1] Yuan, J.; Bae, E.; Tai, X.-C.; Boykov, Y.
+%       A Continuous Max-Flow Approach to Potts Model
+%       ECCV, 2010
+%
+%   [2] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM.
+%       A Continuous Max-Flow Approach to General
+%       Hierarchical Multi-Labelling Problems
+%       arXiv preprint arXiv:1404.0336
+
   
 clear all; close all;
 

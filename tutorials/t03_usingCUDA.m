@@ -1,5 +1,15 @@
 %% Tutorial 03: Using different implentation of solvers (Matlab/C/CUDA)
 %  Martin Rajchl, Imperial College London, 2015
+%
+%   [1] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM.
+%       A Continuous Max-Flow Approach to General
+%       Hierarchical Multi-Labelling Problems
+%       arXiv preprint arXiv:1404.0336
+%
+%   [2] Rajchl, M.; Yuan, J.; Peters, TM.
+%       Real-time segmentation in 4D ultrasound with 
+%       continuous max-flow
+%       SPIE Medical Imaging 2012, 83141F-83141F-8
   
 clear all; close all;
 

@@ -1,5 +1,18 @@
 %% Tutorial 04: Time-implicit level set propagation with max flow
 %  Martin Rajchl, Imperial College London, 2015
+%
+%   [1] Rajchl, M.; Baxter, JSH.; Bae, E.; Tai, X-C.; Fenster, A.; 
+%       Peters, TM.; Yuan, J.;
+%       Variational Time-Implicit Multiphase Level-Sets: A Fast Convex 
+%       Optimization-Based Solution
+%       EMMCVPR, 2015.
+%
+%   [2] Ukwatta, E.; Yuan, J.; Rajchl, M.; Qiu, W.; Tessier, D; Fenster, A.
+%       3D Carotid Multi-Region MRI Segmentation by Globally Optimal 
+%       Evolution of Coupled Surfaces
+%       IEEE Transactions on Medical Imaging, 2013
+
+
 
 clear all; close all;
 

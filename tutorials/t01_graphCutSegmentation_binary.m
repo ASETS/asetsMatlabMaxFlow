@@ -1,5 +1,15 @@
 %% Tutorial 01: Binary Graph cut segmentation
 %  Martin Rajchl, Imperial College London, 2015
+%
+%   [1] Yuan, J.; Bae, E.; Tai, X,-C.;
+%       A study on continuous max-flow and min-cut approaches
+%       IEEE CVPR, 2010
+%
+%   [2] Rajchl, M.; Yuan, J.; Peters, TM.
+%       Real-time segmentation in 4D ultrasound with 
+%       continuous max-flow
+%       SPIE Medical Imaging 2012, 83141F-83141F-8
+
   
 clear all; close all;
 
