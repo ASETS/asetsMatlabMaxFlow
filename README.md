@@ -20,6 +20,8 @@ BSD (see license.md)
    - T01 Binary graph cuts
    - T02 Multi-region color image segmentation with the Potts model
    - T03 Using different max flow implementations (Matlab, C, CUDA) 
+   - T04 Time-implicit levelset propagation
+   - T05 Levelset image segmentation
 - Application examples for (medical) image segmentation:
     - Interactive max flow graph cuts (3D)
     - Regularization of probabilistic label maps as in atlas-based segmentation (3D)
