@@ -33,7 +33,9 @@ Tutorials:
 [x] - Using CUDA solvers
 [ ] - Comparison of multi-region solvers
 [ ] - Image restoration
-[ ] - Levelset propagation
+[x] - Binary Levelset propagation
+[ ] - Coupled levelset propagation
+[ ] - Multi-phase levelset propagation
 
 
 
