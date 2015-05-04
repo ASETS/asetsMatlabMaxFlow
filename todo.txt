@@ -4,9 +4,7 @@ Website:
 Applications: 
 [x] - 3D interactive segmentation 
 [x] - Probabilistic label map regularization 
-[x] - Multi-phase levelsets implementation
 [x] - Regularization of manual segmentations (Gaussian smooth, max flow)
-[ ] - Iterative MF distribution matching
 [ ] - Refactor visualization 
 [ ] - Star-shape prior application 
 
@@ -33,9 +31,6 @@ Tutorials:
 [x] - Using CUDA solvers
 [ ] - Comparison of multi-region solvers
 [ ] - Image restoration
-[x] - Binary Levelset propagation
-[ ] - Coupled levelset propagation
-[ ] - Multi-phase levelset propagation
 
 
 
