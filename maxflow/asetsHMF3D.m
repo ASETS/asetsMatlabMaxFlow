@@ -1,9 +1,9 @@
 classdef asetsHMF3D < handle
 %   John SH Baxter, Robarts Research Institute, 2015
 %
-%   Full implementation with of [1,2] in 2D and HMF implementation
-%   of [3]. Geodesic shape constraints (via lx, ly, & lz) are implemented
-%   as described in [4].
+%   Full implementation with of [1,2] in 3D and HMF implementation
+%   of [3]. Optional geodesic shape constraints (via lx, ly & lz) are 
+%   implemented as described in [4].
 %
 %   [1] Baxter, JSH.; Rajchl, M.; Yuan, J.; Peters, TM.
 %       A Continuous Max-Flow Approach to General
@@ -64,12 +64,12 @@ methods
             h.Ct = Ct;
         else
             h.D = h.C{1}.D;
-            h.Ct = [];
+            h.Ct = zeros(0,'like',h.C{1}.Ct);
         end
         
         %create buffers
         h.alpha = alpha;
-        h.u = zeros(h.D);
+        h.u = zeros(h.D,'like',h.Ct);
         
     end
 
@@ -91,7 +91,7 @@ methods
         for i = 1:numIts
             h.ResetPseudoFlowCapacity();
             h.PushDownPseudoFlows();
-            h.g = zeros(h.D);
+            h.g = zeros(h.D,'like',h.Ct);
             h.UpdatePseudoFlowLabels(cc,h);
             h.NormalizePseudoFlowLabels(h);
             h.PushUpCapacityReqs(h);
@@ -106,13 +106,13 @@ methods
         for i = 1:length(h.C)
             h.C{i}.InitializeFullFlow();
         end
-        h.g = zeros(h.D);
-        h.pt = zeros(h.D);
-        h.div = zeros(h.D);
-        h.u = zeros(h.D);
-        h.px = zeros([h.D(1)-1 h.D(2) h.D(3)]);
-        h.py = zeros([h.D(1) h.D(2)-1 h.D(3)]);
-        h.pz = zeros([h.D(1) h.D(2) h.D(3)-1]);
+        h.g = zeros(h.D,'like',h.Ct);
+        h.pt = zeros(h.D,'like',h.Ct);
+        h.div = zeros(h.D,'like',h.Ct);
+        h.u = zeros(h.D,'like',h.Ct);
+        h.px = zeros([h.D(1)-1 h.D(2) h.D(3)],'like',h.Ct);
+        h.py = zeros([h.D(1) h.D(2)-1 h.D(3)],'like',h.Ct);
+        h.pz = zeros([h.D(1) h.D(2) h.D(3)-1],'like',h.Ct);
         
         %normalize lengths for geodesic shape constraint
         if numel(h.lx) > 0 && numel(h.ly) > 0 && numel(h.lz) > 0
@@ -146,14 +146,14 @@ methods
         for i = 1:length(h.C)
             h.C{i}.InitializePseudoFlow();
         end
-        h.g = zeros(h.D);
+        h.g = zeros(h.D,'like',h.Ct);
         clear h.pt;
-        h.px = zeros([h.D(1)-1 h.D(2) h.D(3)]);
-        h.py = zeros([h.D(1) h.D(2)-1 h.D(3)]);
-        h.pz = zeros([h.D(1) h.D(2) h.D(3)-1]);
-        h.div = zeros(h.D);
+        h.px = zeros([h.D(1)-1 h.D(2) h.D(3)],'like',h.Ct);
+        h.py = zeros([h.D(1) h.D(2)-1 h.D(3)],'like',h.Ct);
+        h.pz = zeros([h.D(1) h.D(2) h.D(3)-1],'like',h.Ct);
+        h.div = zeros(h.D,'like',h.Ct);
         if ~isempty(h.C)
-            h.u = [];
+            h.u = zeros(0,'like',h.Ct);
         end
         
         %normalize lengths for geodesic shape constraint
@@ -215,23 +215,23 @@ methods
             if numel(h.lx) > 0
                 
                 %find exemption amount
-                a = zeros(h.D);
-                a(1:h.D(1)-1,:,:) =                    max((h.px>0).*h.px.*h.lx(1:h.D(1)-1,:,:),0);
-                a(2:h.D(1),:,:)   = a(2:h.D(1),:,:)  + max((h.px<0).*h.px.*h.lx(2:h.D(1),:,:)  ,0);
-                a(:,1:h.D(2)-1,:) = a(:,1:h.D(2)-1,:)+ max((h.py>0).*h.py.*h.ly(:,1:h.D(2)-1,:),0);
-                a(:,2:h.D(2),:)   = a(:,2:h.D(2),:)  + max((h.py<0).*h.py.*h.ly(:,2:h.D(2),:)  ,0);
-                a(:,:,1:h.D(3)-1) = a(:,:,1:h.D(3)-1)+ max((h.pz>0).*h.pz.*h.lz(:,:,1:h.D(3)-1),0);
-                a(:,:,2:h.D(3))   = a(:,:,2:h.D(3))  + max((h.pz<0).*h.pz.*h.lz(:,:,2:h.D(3))  ,0);
+                h.g(2:h.D(1),:,:)   =                    max((h.px<0).*h.px.*h.lx(2:h.D(1),:,:)  ,0);
+                h.g(1,:,:) = 0;
+                h.g(1:h.D(1)-1,:,:) = h.g(1:h.D(1)-1,:,:)+ max((h.px>0).*h.px.*h.lx(1:h.D(1)-1,:,:),0);
+                h.g(:,1:h.D(2)-1,:) = h.g(:,1:h.D(2)-1,:)+ max((h.py>0).*h.py.*h.ly(:,1:h.D(2)-1,:),0);
+                h.g(:,2:h.D(2),:)   = h.g(:,2:h.D(2),:)  + max((h.py<0).*h.py.*h.ly(:,2:h.D(2),:)  ,0);
+                h.g(:,:,1:h.D(3)-1) = h.g(:,:,1:h.D(3)-1)+ max((h.pz>0).*h.pz.*h.lz(:,:,1:h.D(3)-1),0);
+                h.g(:,:,2:h.D(3))   = h.g(:,:,2:h.D(3))  + max((h.pz<0).*h.pz.*h.lz(:,:,2:h.D(3))  ,0);
                 
                 %find exemption amount
-                ex =      (h.px>0 & h.lx(1:h.D(1)-1,:,:)>0).*h.lx(1:h.D(1)-1,:,:).*a(1:h.D(1)-1,:,:);
-                ex = ex + (h.px<0 & h.lx(2:h.D(1),:,:)<0).*h.lx(2:h.D(1),:,:).*a(2:h.D(1),:,:);
+                ex =      (h.px>0 & h.lx(1:h.D(1)-1,:,:)>0).*h.lx(1:h.D(1)-1,:,:).*h.g(1:h.D(1)-1,:,:);
+                ex = ex + (h.px<0 & h.lx(2:h.D(1),:,:)<0).*h.lx(2:h.D(1),:,:).*h.g(2:h.D(1),:,:);
                 
-                ey =      (h.py>0 & h.ly(:,1:h.D(2)-1,:)>0).*h.ly(:,1:h.D(2)-1,:).*a(:,1:h.D(2)-1,:);
-                ey = ey + (h.py<0 & h.ly(:,2:h.D(2),:)<0).*h.ly(:,2:h.D(2),:).*a(:,2:h.D(2),:);
+                ey =      (h.py>0 & h.ly(:,1:h.D(2)-1,:)>0).*h.ly(:,1:h.D(2)-1,:).*h.g(:,1:h.D(2)-1,:);
+                ey = ey + (h.py<0 & h.ly(:,2:h.D(2),:)<0).*h.ly(:,2:h.D(2),:).*h.g(:,2:h.D(2),:);
                 
-                ez =      (h.pz>0 & h.lz(:,:,1:h.D(3)-1)>0).*h.lz(:,:,1:h.D(3)-1).*a(:,:,1:h.D(3)-1);
-                ez = ez + (h.pz<0 & h.lz(:,:,2:h.D(3))<0).*h.lz(:,:,2:h.D(3)).*a(:,:,2:h.D(3));
+                ez =      (h.pz>0 & h.lz(:,:,1:h.D(3)-1)>0).*h.lz(:,:,1:h.D(3)-1).*h.g(:,:,1:h.D(3)-1);
+                ez = ez + (h.pz<0 & h.lz(:,:,2:h.D(3))<0).*h.lz(:,:,2:h.D(3)).*h.g(:,:,2:h.D(3));
 
                 %apply exemption
                 h.px = h.px - ex;
@@ -239,9 +239,9 @@ methods
                 h.pz = h.pz - ez;
                 
                 %find flow mag
-                h.g = zeros(h.D);
+                h.g(2:h.D(1),:,:)   = h.px.^2;
+                h.g(1,:,:) = 0;
                 h.g(1:h.D(1)-1,:,:) = h.g(1:h.D(1)-1,:,:) + h.px.^2;
-                h.g(2:h.D(1),:,:)   = h.g(2:h.D(1),:,:)   + h.px.^2;
                 h.g(:,1:h.D(2)-1,:) = h.g(:,1:h.D(2)-1,:) + h.py.^2;
                 h.g(:,2:h.D(2),:)   = h.g(:,2:h.D(2),:)   + h.py.^2;
                 h.g(:,:,1:h.D(3)-1) = h.g(:,:,1:h.D(3)-1) + h.pz.^2;
@@ -264,15 +264,14 @@ methods
             else
 
                 %find flow mag
-                h.g = zeros(h.D);
+                h.g(2:h.D(1),:,:)   = h.px.^2;
+                h.g(1,:,:) = 0;
                 h.g(1:h.D(1)-1,:,:) = h.g(1:h.D(1)-1,:,:) + h.px.^2;
-                h.g(2:h.D(1),:,:)   = h.g(2:h.D(1),:,:)   + h.px.^2;
                 h.g(:,1:h.D(2)-1,:) = h.g(:,1:h.D(2)-1,:) + h.py.^2;
                 h.g(:,2:h.D(2),:)   = h.g(:,2:h.D(2),:)   + h.py.^2;
                 h.g(:,:,1:h.D(3)-1) = h.g(:,:,1:h.D(3)-1) + h.pz.^2;
                 h.g(:,:,2:h.D(3))   = h.g(:,:,2:h.D(3))   + h.pz.^2;
                 h.g = h.g .^ 0.5;
-
 
                 %correct for flow mag
                 mask = (h.g <= h.alpha);
@@ -288,8 +287,8 @@ methods
             end
             
             %calculate divergence
-            h.div = zeros(h.D);
-            h.div(1:h.D(1)-1,:,:) = h.div(1:h.D(1)-1,:,:) + h.px;
+            h.div(1:h.D(1)-1,:,:) = h.px;
+            h.div(h.D(1),:,:) = 0;
             h.div(2:h.D(1),:,:)   = h.div(2:h.D(1),:,:)   - h.px;
             h.div(:,1:h.D(2)-1,:) = h.div(:,1:h.D(2)-1,:) + h.py;
             h.div(:,2:h.D(2),:)   = h.div(:,2:h.D(2),:)   - h.py;
@@ -392,7 +391,7 @@ methods
     function PushUpCapacityReqs(h,a)
         %normalize and clear
         if ~isempty(h.C)
-            h.g = zeros(h.D);
+            h.g = zeros(h.D,'like',h.Ct);
         end
         for i = 1:length(h.C)
             h.C{i}.PushUpCapacityReqs(a);
@@ -416,23 +415,24 @@ methods
             if numel(h.lx) > 0
                 
                 %find exemption amount
-                a = zeros(h.D);
-                a(1:h.D(1)-1,:,:) =                    max((h.px>0).*h.px.*h.lx(1:h.D(1)-1,:,:),0);
-                a(2:h.D(1),:,:)   = a(2:h.D(1),:,:)  + max((h.px<0).*h.px.*h.lx(2:h.D(1),:,:)  ,0);
-                a(:,1:h.D(2)-1,:) = a(:,1:h.D(2)-1,:)+ max((h.py>0).*h.py.*h.ly(:,1:h.D(2)-1,:),0);
-                a(:,2:h.D(2),:)   = a(:,2:h.D(2),:)  + max((h.py<0).*h.py.*h.ly(:,2:h.D(2),:)  ,0);
-                a(:,:,1:h.D(3)-1) = a(:,:,1:h.D(3)-1)+ max((h.pz>0).*h.pz.*h.lz(:,:,1:h.D(3)-1),0);
-                a(:,:,2:h.D(3))   = a(:,:,2:h.D(3))  + max((h.pz<0).*h.pz.*h.lz(:,:,2:h.D(3))  ,0);
+                %find exemption amount
+                h.g(2:h.D(1),:,:)   =                    max((h.px<0).*h.px.*h.lx(2:h.D(1),:,:)  ,0);
+                h.g(1,:,:) = 0;
+                h.g(1:h.D(1)-1,:,:) = h.g(1:h.D(1)-1,:,:)+ max((h.px>0).*h.px.*h.lx(1:h.D(1)-1,:,:),0);
+                h.g(:,1:h.D(2)-1,:) = h.g(:,1:h.D(2)-1,:)+ max((h.py>0).*h.py.*h.ly(:,1:h.D(2)-1,:),0);
+                h.g(:,2:h.D(2),:)   = h.g(:,2:h.D(2),:)  + max((h.py<0).*h.py.*h.ly(:,2:h.D(2),:)  ,0);
+                h.g(:,:,1:h.D(3)-1) = h.g(:,:,1:h.D(3)-1)+ max((h.pz>0).*h.pz.*h.lz(:,:,1:h.D(3)-1),0);
+                h.g(:,:,2:h.D(3))   = h.g(:,:,2:h.D(3))  + max((h.pz<0).*h.pz.*h.lz(:,:,2:h.D(3))  ,0);
                 
                 %find exemption amount
-                ex =      (h.px>0 & h.lx(1:h.D(1)-1,:,:)>0).*h.lx(1:h.D(1)-1,:,:).*a(1:h.D(1)-1,:,:);
-                ex = ex + (h.px<0 & h.lx(2:h.D(1),:,:)<0).*h.lx(2:h.D(1),:,:).*a(2:h.D(1),:,:);
+                ex =      (h.px>0 & h.lx(1:h.D(1)-1,:,:)>0).*h.lx(1:h.D(1)-1,:,:).*h.g(1:h.D(1)-1,:,:);
+                ex = ex + (h.px<0 & h.lx(2:h.D(1),:,:)<0).*h.lx(2:h.D(1),:,:).*h.g(2:h.D(1),:,:);
                 
-                ey =      (h.py>0 & h.ly(:,1:h.D(2)-1,:)>0).*h.ly(:,1:h.D(2)-1,:).*a(:,1:h.D(2)-1,:);
-                ey = ey + (h.py<0 & h.ly(:,2:h.D(2),:)<0).*h.ly(:,2:h.D(2),:).*a(:,2:h.D(2),:);
+                ey =      (h.py>0 & h.ly(:,1:h.D(2)-1,:)>0).*h.ly(:,1:h.D(2)-1,:).*h.g(:,1:h.D(2)-1,:);
+                ey = ey + (h.py<0 & h.ly(:,2:h.D(2),:)<0).*h.ly(:,2:h.D(2),:).*h.g(:,2:h.D(2),:);
                 
-                ez =      (h.pz>0 & h.lz(:,:,1:h.D(3)-1)>0).*h.lz(:,:,1:h.D(3)-1).*a(:,:,1:h.D(3)-1);
-                ez = ez + (h.pz<0 & h.lz(:,:,2:h.D(3))<0).*h.lz(:,:,2:h.D(3)).*a(:,:,2:h.D(3));
+                ez =      (h.pz>0 & h.lz(:,:,1:h.D(3)-1)>0).*h.lz(:,:,1:h.D(3)-1).*h.g(:,:,1:h.D(3)-1);
+                ez = ez + (h.pz<0 & h.lz(:,:,2:h.D(3))<0).*h.lz(:,:,2:h.D(3)).*h.g(:,:,2:h.D(3));
 
                 %apply exemption
                 h.px = h.px - ex;
@@ -440,9 +440,9 @@ methods
                 h.pz = h.pz - ez;
                 
                 %find flow mag
-                h.g = zeros(h.D);
+                h.g(2:h.D(1),:,:)   = h.px.^2;
+                h.g(1,:,:) = 0;
                 h.g(1:h.D(1)-1,:,:) = h.g(1:h.D(1)-1,:,:) + h.px.^2;
-                h.g(2:h.D(1),:,:)   = h.g(2:h.D(1),:,:)   + h.px.^2;
                 h.g(:,1:h.D(2)-1,:) = h.g(:,1:h.D(2)-1,:) + h.py.^2;
                 h.g(:,2:h.D(2),:)   = h.g(:,2:h.D(2),:)   + h.py.^2;
                 h.g(:,:,1:h.D(3)-1) = h.g(:,:,1:h.D(3)-1) + h.pz.^2;
@@ -465,15 +465,14 @@ methods
             else
 
                 %find flow mag
-                h.g = zeros(h.D);
+                h.g(2:h.D(1),:,:)   = h.px.^2;
+                h.g(1,:,:) = 0;
                 h.g(1:h.D(1)-1,:,:) = h.g(1:h.D(1)-1,:,:) + h.px.^2;
-                h.g(2:h.D(1),:,:)   = h.g(2:h.D(1),:,:)   + h.px.^2;
                 h.g(:,1:h.D(2)-1,:) = h.g(:,1:h.D(2)-1,:) + h.py.^2;
                 h.g(:,2:h.D(2),:)   = h.g(:,2:h.D(2),:)   + h.py.^2;
                 h.g(:,:,1:h.D(3)-1) = h.g(:,:,1:h.D(3)-1) + h.pz.^2;
                 h.g(:,:,2:h.D(3))   = h.g(:,:,2:h.D(3))   + h.pz.^2;
                 h.g = h.g .^ 0.5;
-
 
                 %correct for flow mag
                 mask = (h.g <= h.alpha);
@@ -489,8 +488,8 @@ methods
             end
             
             %calculate divergence
-            h.div = zeros(h.D);
-            h.div(1:h.D(1)-1,:,:) = h.div(1:h.D(1)-1,:,:) + h.px;
+            h.div(1:h.D(1)-1,:,:) = h.px;
+            h.div(h.D(1),:,:) = 0;
             h.div(2:h.D(1),:,:)   = h.div(2:h.D(1),:,:)   - h.px;
             h.div(:,1:h.D(2)-1,:) = h.div(:,1:h.D(2)-1,:) + h.py;
             h.div(:,2:h.D(2),:)   = h.div(:,2:h.D(2),:)   - h.py;
