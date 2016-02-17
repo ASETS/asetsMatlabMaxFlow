@@ -54,7 +54,7 @@ end
 
 % Matlab-interal CUDA implementation with single precision
 if(gpuDeviceCount)
-    [u4, conv4, i4, time4] = asetsBinaryMF3D(gpuArray(Cs), gpuArray(Ct), gpuArray(alpha), pars);
+    [u4, conv4, i4, time4] = asetsBinaryMF3D(gpuArray(single(Cs)), gpuArray(single(Ct)), gpuArray(single(alpha)), pars);
 else
     error('No CUDA devices detected. Skipping computation.');
 end
