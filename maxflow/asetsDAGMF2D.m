@@ -145,9 +145,16 @@ methods
             h.C{i}.InitializeFullFlow();
         end
         h.g = zeros(h.D,'like',h.Ct);
-        h.pt = zeros(h.D,'like',h.Ct);
+        if( length(h.C) > 1 )
+            h.pt = zeros(h.D,'like',h.Ct);
+            for i = 1:length(h.C)
+                h.pt = max( h.pt, h.C{1}.pt );
+            end
+        else
+            h.pt = h.Ct;
+        end
         if( length(h.P) > 1 )
-            h.pn = zeros(h.D,'like',h.Ct);
+            h.pn = h.pt;
         end
         h.div = zeros(h.D,'like',h.Ct);
         h.u = zeros(h.D,'like',h.Ct);

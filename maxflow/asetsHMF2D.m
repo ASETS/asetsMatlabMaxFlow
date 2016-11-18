@@ -32,6 +32,9 @@ properties
     alpha
     D
     
+    dataCost
+    reguCost
+    
     u
     
     pt
@@ -80,6 +83,7 @@ methods
             h.UpdateSpatialFlows(steps,cc);
             drawnow
         end
+        h.CalculateCostsFullFlow();
         h.DeInitializeFullFlow();
     end
 
@@ -176,6 +180,26 @@ methods
         clear h.div;
     end
     
+    %calculate and propogate costs
+    function CalculateCostsFullFlow(h)
+        
+        if isempty(h.C)
+            h.dataCost = sum( h.u(:) .* h.Ct(:) );
+        else
+            h.dataCost = 0;
+        end
+        if ~isempty(h.P)
+            h.reguCost = sum( h.u(:) .* h.div(:) );
+        else
+            h.reguCost = 0;
+        end
+        
+        for i = 1:length(h.C)
+            h.C{i}.CalculateCostsFullFlow();
+            h.dataCost = h.dataCost + h.C{i}.dataCost;
+            h.reguCost = h.reguCost + h.C{i}.reguCost;
+        end
+    end
     
     %update labels (top-down)
     function UpdateLabels(h,cc)
